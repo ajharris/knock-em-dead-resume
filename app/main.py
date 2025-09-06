@@ -203,7 +203,9 @@ def create_app():
             create_rewritten_bullet(db, original_text=payload.text, rewritten_text=b, user_id=None)
         return BulletRewriteResponse(bullets=bullets)
 
+    from .resume_export import router as resume_export_router
     app.include_router(linkedin_router)
+    app.include_router(resume_export_router)
     return app
 
 # Expose app at module level for imports
