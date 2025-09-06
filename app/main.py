@@ -279,8 +279,40 @@ def create_app():
     from bs4 import BeautifulSoup
     import os
     from urllib.parse import urlparse
+    import ipaddress
 
-    @app.post("/jobad", response_model=schemas.JobAd)
+    def is_safe_url(url_str, allowed_domains):
+        try:
+            parsed = urlparse(url_str)
+            # Scheme check
+            if parsed.scheme not in ("http", "https"):
+                return False
+            # Hostname check
+            if not parsed.hostname:
+                return False
+            # Disallow localhost and private IPs
+            try:
+                ip = ipaddress.ip_address(parsed.hostname)
+                if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_unspecified:
+                    return False
+            except ValueError:
+                pass  # not an IP, continue hostname checks
+            # Strict domain match
+            if parsed.hostname not in allowed_domains:
+                # Allow specific test domains
+                if (
+                    parsed.hostname == "fakejobad.com"
+                    or parsed.hostname.endswith(".fakejobad.com")
+                ):
+                    pass  # allow
+                else:
+                    return False
+            # Optional: Port check (allow default ports only)
+            if parsed.port not in (None, 80, 443):
+                return False
+            return True
+        except Exception:
+            return False
     def create_job_ad(
         payload: schemas.JobAdCreate,
         db: Session = Depends(get_db)
@@ -305,16 +337,8 @@ def create_app():
         }
         # If URL is provided and any of the main fields are missing, try to scrape them
         if payload.url and (not payload.title or not payload.company or not payload.location or not payload.description):
-            parsed_url = urlparse(payload.url)
-            # Allow test URLs (e.g., fakejobad.com) to pass for testing
-            if (
-                parsed_url.hostname not in ALLOWED_DOMAINS
-                and not (
-                    parsed_url.hostname == "fakejobad.com"
-                    or parsed_url.hostname.endswith(".fakejobad.com")
-                )
-            ):
-                raise HTTPException(status_code=400, detail="URL domain is not allowed for scraping.")
+            if not is_safe_url(payload.url, ALLOWED_DOMAINS):
+                raise HTTPException(status_code=400, detail="URL is not allowed or is unsafe for scraping.")
             try:
                 resp = requests.get(payload.url, timeout=10)
                 soup = BeautifulSoup(resp.text, 'html.parser')
