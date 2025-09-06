@@ -212,6 +212,7 @@ def create_app():
     import requests
     from bs4 import BeautifulSoup
     import os
+    from urllib.parse import urlparse
 
     @app.post("/jobad", response_model=schemas.JobAd)
     def create_job_ad(
@@ -219,6 +220,13 @@ def create_app():
         db: Session = Depends(get_db)
     ):
         # For MVP: Only handle 'manual' and 'indeed' sources, stub for API integration
+        ALLOWED_DOMAINS = [
+            "indeed.com",
+            "www.indeed.com",
+            "linkedin.com",
+            "www.linkedin.com",
+            # add more allowed domains as needed
+        ]
         job_data = {
             'source': payload.source,
             'url': payload.url,
@@ -230,6 +238,9 @@ def create_app():
         }
         # If URL is provided and any of the main fields are missing, try to scrape them
         if payload.url and (not payload.title or not payload.company or not payload.location or not payload.description):
+            parsed_url = urlparse(payload.url)
+            if parsed_url.hostname not in ALLOWED_DOMAINS:
+                raise HTTPException(status_code=400, detail="URL domain is not allowed for scraping.")
             try:
                 resp = requests.get(payload.url, timeout=10)
                 soup = BeautifulSoup(resp.text, 'html.parser')
