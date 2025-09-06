@@ -1,3 +1,4 @@
+
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -6,8 +7,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 import os
-
-
 
 # Use in-memory SQLite for tests with StaticPool
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -26,7 +25,6 @@ def override_get_db():
     finally:
         db.close()
 
-
 # Patch app.database to use test engine/session
 import app.database as app_database
 app_database.engine = engine
@@ -34,8 +32,7 @@ app_database.SessionLocal = TestingSessionLocal
 app.dependency_overrides[database.get_db] = override_get_db
 client = TestClient(app)
 
-
-def test_full_profile_flow():
+def test_profile_endpoints():
     # Create user via API
     user_data = {"name": "Alice", "email": "alice@example.com"}
     r = client.post("/users", json=user_data)
@@ -53,7 +50,6 @@ def test_full_profile_flow():
     r = client.post("/programs", json=program)
     assert r.status_code == 200
     program_id = r.json()["id"]
-
 
     # Add company
     company = {"name": "Acme"}

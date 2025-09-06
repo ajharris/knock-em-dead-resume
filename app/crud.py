@@ -1,5 +1,34 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
+from fastapi import HTTPException
+
+def update_experience_summary(db: Session, user_id: int, summary: schemas.ExperienceSummaryUpdate):
+    existing = db.query(models.ExperienceSummary).filter(models.ExperienceSummary.user_id == user_id).first()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Experience summary not found")
+    existing.summary = summary.summary
+    existing.user_edits = summary.user_edits
+    db.commit()
+    db.refresh(existing)
+    return existing
+
+def create_user(db: Session, user: schemas.UserCreate):
+    db_user = models.User(**user.dict())
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def create_experience_summary(db: Session, user_id: int, summary: schemas.ExperienceSummaryCreate):
+    db_summary = models.ExperienceSummary(user_id=user_id, **summary.dict())
+    db.add(db_summary)
+    db.commit()
+    db.refresh(db_summary)
+    return db_summary
+
+def get_experience_summary(db: Session, user_id: int):
+    return db.query(models.ExperienceSummary).filter(models.ExperienceSummary.user_id == user_id).first()
+
 
 def create_company(db: Session, company: 'schemas.CompanyCreate'):
     db_company = models.Company(**company.dict())
@@ -45,9 +74,7 @@ def create_interest(db: Session, user_id: int, interest: schemas.InterestCreate)
     db.commit()
     db.refresh(db_interest)
     return db_interest
-from sqlalchemy.orm import Session
-from . import models, schemas
-from fastapi import HTTPException
+
 
 def get_user(db: Session, user_id: int):
     user = db.query(models.User).filter(models.User.id == user_id).first()

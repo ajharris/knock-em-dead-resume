@@ -3,6 +3,10 @@ from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
 
+from sqlalchemy import Column, Integer, String, ForeignKey, Text
+from sqlalchemy.orm import relationship, declarative_base
+
+# User Model
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, index=True)
@@ -12,12 +16,37 @@ class User(Base):
     skills = relationship('Skill', back_populates='user', cascade="all, delete-orphan")
     educations = relationship('Education', back_populates='user', cascade="all, delete-orphan")
     interests = relationship('Interest', back_populates='user', cascade="all, delete-orphan")
+    job_preferences = relationship('JobPreferences', back_populates='user', uselist=False, cascade="all, delete-orphan")
+    experience_summary = relationship('ExperienceSummary', back_populates='user', uselist=False, cascade="all, delete-orphan")
+# Experience Summary Model
+class ExperienceSummary(Base):
+    __tablename__ = 'experience_summaries'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True)
+    summary = Column(Text, nullable=False)
+    user_edits = Column(Text, nullable=True)
+    user = relationship('User', back_populates='experience_summary')
 class Interest(Base):
     __tablename__ = 'interests'
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id'))
     name = Column(String, nullable=False)
     user = relationship('User', back_populates='interests')
+
+
+# Job Preferences Model
+class JobPreferences(Base):
+    __tablename__ = 'job_preferences'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True)
+    relocate = Column(String, nullable=False)  # 'yes' or 'no'
+    willing_to_travel = Column(String, nullable=False)  # 'yes' or 'no'
+    job_title_1 = Column(String, nullable=False)
+    job_title_2 = Column(String, nullable=True)
+    job_title_3 = Column(String, nullable=True)
+    desired_industry_segment = Column(String, nullable=True)
+    career_change = Column(String, nullable=False)  # 'yes' or 'no'
+    user = relationship('User', back_populates='job_preferences')
 
 
 class Company(Base):
