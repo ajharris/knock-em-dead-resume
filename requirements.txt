@@ -142,3 +142,8 @@ webencodings==0.5.1
 openai==1.13.3
 python-dotenv==1.0.1
 websocket-client==1.8.0
+
+# For resume export
+python-docx==1.1.0
+pydyf==0.8.0
+weasyprint==61.2
