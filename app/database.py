@@ -3,6 +3,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
 
+from app.models import Base
+
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:postgres@localhost/resume_db")
 
 # Allow engine and SessionLocal to be overridden for testing

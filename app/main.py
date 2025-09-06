@@ -1,7 +1,9 @@
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from . import models, schemas, database, crud
+from .ai_bullet_rewriter import rewrite_bullet_with_openai
+from .crud_bullet import create_rewritten_bullet
 from fastapi.middleware.cors import CORSMiddleware
 from .linkedin_oauth import router as linkedin_router
 from typing import List
@@ -12,6 +14,16 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+from pydantic import BaseModel
+from typing import Any
+
+class BulletRewriteRequest(BaseModel):
+    text: str
+
+class BulletRewriteResponse(BaseModel):
+    bullets: list[str]
 
 def create_app():
 
@@ -183,6 +195,14 @@ def create_app():
     def list_roles(db: Session = Depends(get_db)):
         return db.query(models.Role).all()
 	
+    @app.post("/rewrite_bullet", response_model=BulletRewriteResponse)
+    def rewrite_bullet_endpoint(payload: BulletRewriteRequest, db: Session = Depends(get_db)):
+        bullets = rewrite_bullet_with_openai(payload.text)
+        # Store each bullet in DB (user_id can be None for now)
+        for b in bullets:
+            create_rewritten_bullet(db, original_text=payload.text, rewritten_text=b, user_id=None)
+        return BulletRewriteResponse(bullets=bullets)
+
     app.include_router(linkedin_router)
     return app
 
