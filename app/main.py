@@ -203,9 +203,90 @@ def create_app():
             create_rewritten_bullet(db, original_text=payload.text, rewritten_text=b, user_id=None)
         return BulletRewriteResponse(bullets=bullets)
 
+
     from .resume_export import router as resume_export_router
     app.include_router(linkedin_router)
     app.include_router(resume_export_router)
+
+    # --- Job Ad Input Endpoint ---
+    import requests
+    from bs4 import BeautifulSoup
+    import os
+    from urllib.parse import urlparse
+
+    @app.post("/jobad", response_model=schemas.JobAd)
+    def create_job_ad(
+        payload: schemas.JobAdCreate,
+        db: Session = Depends(get_db)
+    ):
+        # For MVP: Only handle 'manual' and 'indeed' sources, stub for API integration
+        ALLOWED_DOMAINS = [
+            "indeed.com",
+            "www.indeed.com",
+            "linkedin.com",
+            "www.linkedin.com",
+            # add more allowed domains as needed
+        ]
+        job_data = {
+            'source': payload.source,
+            'url': payload.url,
+            'title': payload.title,
+            'company': payload.company,
+            'location': payload.location,
+            'description': payload.description,
+            'skills': payload.skills if payload.skills is not None else [],
+        }
+        # If URL is provided and any of the main fields are missing, try to scrape them
+        if payload.url and (not payload.title or not payload.company or not payload.location or not payload.description):
+            parsed_url = urlparse(payload.url)
+            if parsed_url.hostname not in ALLOWED_DOMAINS:
+                raise HTTPException(status_code=400, detail="URL domain is not allowed for scraping.")
+            try:
+                resp = requests.get(payload.url, timeout=10)
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                if not job_data['title']:
+                    job_data['title'] = soup.find(['h1', 'h2']).get_text(strip=True) if soup.find(['h1', 'h2']) else None
+                if not job_data['company']:
+                    company = soup.find('div', class_='company') or soup.find('span', class_='company')
+                    if company:
+                        job_data['company'] = company.get_text(strip=True)
+                if not job_data['location']:
+                    location = soup.find('div', class_='location') or soup.find('span', class_='location')
+                    if location:
+                        job_data['location'] = location.get_text(strip=True)
+                if not job_data['description']:
+                    desc = soup.find('div', class_='description') or soup.find('div', id='jobDescriptionText') or soup.find('section')
+                    if desc:
+                        job_data['description'] = desc.get_text(separator=' ', strip=True)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Failed to fetch or parse job ad: {e}")
+        # AI Assistance: Summarize and extract skills (stub)
+        if job_data['description'] and not job_data['skills']:
+            # Improved keyword extraction: include capitalized words and common tech keywords
+            import re
+            words = re.findall(r'\b\w+\b', job_data['description'])
+            tech_keywords = {'Python', 'SQL', 'ML', 'AI', 'Java', 'C++', 'JavaScript', 'cloud', 'data', 'teamwork', 'collaboration', 'PyTorch'}
+            skills = set()
+            for w in words:
+                if w in tech_keywords or w.isupper() or (w.istitle() and len(w) > 2):
+                    skills.add(w)
+            job_data['skills'] = list(skills)[:10]
+        # Save to DB
+        db_job_ad = crud.create_job_ad(db, schemas.JobAdCreate(
+            user_id=payload.user_id,
+            source=job_data['source'],
+            url=job_data['url'],
+            title=job_data['title'],
+            company=job_data['company'],
+            location=job_data['location'],
+            description=job_data['description'],
+            skills=job_data['skills'],
+        ))
+        # Convert skills from comma-separated string to list for API response
+        job_ad_dict = db_job_ad.__dict__.copy()
+        if isinstance(job_ad_dict.get('skills'), str):
+            job_ad_dict['skills'] = [s.strip() for s in job_ad_dict['skills'].split(',') if s.strip()]
+        return schemas.JobAd.model_validate(job_ad_dict)
     return app
 
 # Expose app at module level for imports

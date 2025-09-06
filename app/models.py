@@ -96,6 +96,7 @@ class Program(Base):
     name = Column(String, unique=True, nullable=False)
     educations = relationship('Education', back_populates='program')
 
+
 class Education(Base):
     __tablename__ = 'educations'
     id = Column(Integer, primary_key=True, index=True)
@@ -109,3 +110,22 @@ class Education(Base):
     user = relationship('User', back_populates='educations')
     school = relationship('School', back_populates='educations')
     program = relationship('Program', back_populates='educations')
+
+# JobAd Model
+from sqlalchemy import DateTime, ARRAY
+import datetime
+
+class JobAd(Base):
+    __tablename__ = 'job_ads'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    source = Column(String, nullable=False)  # 'linkedin', 'indeed', 'manual', etc.
+    url = Column(String, nullable=True)
+    title = Column(String, nullable=True)
+    company = Column(String, nullable=True)
+    location = Column(String, nullable=True)
+    description = Column(Text, nullable=True)
+    skills = Column(Text, nullable=True)  # Store as comma-separated string for portability
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    user = relationship('User')

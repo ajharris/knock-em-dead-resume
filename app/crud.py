@@ -1,6 +1,24 @@
+
 from sqlalchemy.orm import Session
 from . import models, schemas
 from fastapi import HTTPException
+
+def create_job_ad(db: Session, job_ad: schemas.JobAdCreate):
+    # Convert skills list to comma-separated string for DB
+    db_job_ad = models.JobAd(
+        user_id=job_ad.user_id,
+        source=job_ad.source,
+        url=job_ad.url,
+        title=job_ad.title,
+        company=job_ad.company,
+        location=job_ad.location,
+        description=job_ad.description,
+        skills=','.join(job_ad.skills) if job_ad.skills else None
+    )
+    db.add(db_job_ad)
+    db.commit()
+    db.refresh(db_job_ad)
+    return db_job_ad
 
 def update_experience_summary(db: Session, user_id: int, summary: schemas.ExperienceSummaryUpdate):
     existing = db.query(models.ExperienceSummary).filter(models.ExperienceSummary.user_id == user_id).first()

@@ -1,6 +1,10 @@
 """
-Alembic migration for experience_summaries table
+Revision ID: 20240906_add_experience_summary
+Revises: None
+Create Date: 2025-09-06
 """
+revision = '20240906_add_experience_summary'
+down_revision = None
 from alembic import op
 import sqlalchemy as sa
 
