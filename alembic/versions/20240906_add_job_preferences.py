@@ -1,6 +1,10 @@
 """
-Alembic migration for job_preferences table
+Revision ID: 20240906_add_job_preferences
+Revises: 20240906_add_experience_summary
+Create Date: 2025-09-06
 """
+revision = '20240906_add_job_preferences'
+down_revision = '20240906_add_experience_summary'
 from alembic import op
 import sqlalchemy as sa
 

@@ -165,11 +165,30 @@ class JobPreferencesBase(BaseModel):
 class JobPreferencesCreate(JobPreferencesBase):
     pass
 
-class JobPreferencesUpdate(JobPreferencesBase):
-    pass
 
 class JobPreferences(JobPreferencesBase):
     id: int
     user_id: int
     class Config:
         orm_mode = True
+
+
+class JobAdBase(BaseModel):
+    source: str
+    url: Optional[str] = None
+    title: Optional[str] = None
+    company: Optional[str] = None
+    location: Optional[str] = None
+    description: Optional[str] = None
+    skills: Optional[list[str]] = None
+
+class JobAdCreate(JobAdBase):
+    user_id: int
+
+from datetime import datetime
+
+class JobAd(JobAdBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    model_config = {"from_attributes": True}
