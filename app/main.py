@@ -307,7 +307,13 @@ def create_app():
         if payload.url and (not payload.title or not payload.company or not payload.location or not payload.description):
             parsed_url = urlparse(payload.url)
             # Allow test URLs (e.g., fakejobad.com) to pass for testing
-            if parsed_url.hostname not in ALLOWED_DOMAINS and not parsed_url.hostname.endswith("fakejobad.com"):
+            if (
+                parsed_url.hostname not in ALLOWED_DOMAINS
+                and not (
+                    parsed_url.hostname == "fakejobad.com"
+                    or parsed_url.hostname.endswith(".fakejobad.com")
+                )
+            ):
                 raise HTTPException(status_code=400, detail="URL domain is not allowed for scraping.")
             try:
                 resp = requests.get(payload.url, timeout=10)
