@@ -126,6 +126,8 @@ class JobAd(Base):
     location = Column(String, nullable=True)
     description = Column(Text, nullable=True)
     skills = Column(Text, nullable=True)  # Store as comma-separated string for portability
+    from sqlalchemy import JSON
+    keywords = Column(JSON, nullable=True)  # Store as JSON array for cross-db compatibility
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     user = relationship('User')

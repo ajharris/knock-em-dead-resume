@@ -1,5 +1,6 @@
 
 import JobPreferencesForm from "./JobPreferencesForm";
+import KeywordStep from "./KeywordStep";
 
 const steps = [
   "Job Preferences",
@@ -33,7 +34,13 @@ export default function Stepper() {
       <div style={{ minHeight: 200 }}>
         {step === 0 && <JobPreferencesForm userId={userId} onComplete={() => setStep(s => s + 1)} />}
         {step === 1 && <div>Experience Summary form goes here</div>}
-        {step === 2 && <div>Keywords form goes here</div>}
+        {step === 2 && (
+          <KeywordStep
+            jobAdId={1} // TODO: Replace with real jobAdId
+            jobDescription={"We are seeking a Data Analyst with experience in Python, SQL, and data visualization. Must have strong communication skills and experience with Tableau or Power BI. Familiarity with cloud platforms like AWS is a plus."}
+            onKeywordsChange={keywords => {}}
+          />
+        )}
         {step === 3 && <div>Key Strengths form goes here</div>}
         {step === 4 && <div>Education form goes here</div>}
         {/* Add more forms as needed */}

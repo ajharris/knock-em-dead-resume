@@ -13,8 +13,22 @@ def create_job_ad(db: Session, job_ad: schemas.JobAdCreate):
         company=job_ad.company,
         location=job_ad.location,
         description=job_ad.description,
-        skills=','.join(job_ad.skills) if job_ad.skills else None
+        skills=','.join(job_ad.skills) if job_ad.skills else None,
+        keywords=job_ad.keywords if hasattr(job_ad, 'keywords') and job_ad.keywords else None
     )
+    db.add(db_job_ad)
+    db.commit()
+    db.refresh(db_job_ad)
+    return db_job_ad
+
+def update_job_ad_keywords(db: Session, job_ad_id: int, keywords: list[str]):
+    job_ad = db.query(models.JobAd).filter(models.JobAd.id == job_ad_id).first()
+    if not job_ad:
+        raise HTTPException(status_code=404, detail="JobAd not found")
+    job_ad.keywords = keywords
+    db.commit()
+    db.refresh(job_ad)
+    return job_ad
     db.add(db_job_ad)
     db.commit()
     db.refresh(db_job_ad)

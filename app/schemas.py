@@ -181,9 +181,11 @@ class JobAdBase(BaseModel):
     location: Optional[str] = None
     description: Optional[str] = None
     skills: Optional[list[str]] = None
+    keywords: Optional[list[str]] = None
 
 class JobAdCreate(JobAdBase):
     user_id: int
+    keywords: Optional[list[str]] = None
 
 from datetime import datetime
 
@@ -191,4 +193,5 @@ class JobAd(JobAdBase):
     id: int
     user_id: int
     created_at: datetime
+    keywords: Optional[list[str]] = None
     model_config = {"from_attributes": True}
