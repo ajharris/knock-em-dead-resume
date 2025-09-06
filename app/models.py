@@ -18,6 +18,7 @@ class User(Base):
     interests = relationship('Interest', back_populates='user', cascade="all, delete-orphan")
     job_preferences = relationship('JobPreferences', back_populates='user', uselist=False, cascade="all, delete-orphan")
     experience_summary = relationship('ExperienceSummary', back_populates='user', uselist=False, cascade="all, delete-orphan")
+    rewritten_bullets = relationship('RewrittenBullet', back_populates='user', cascade="all, delete-orphan")
 # Experience Summary Model
 class ExperienceSummary(Base):
     __tablename__ = 'experience_summaries'

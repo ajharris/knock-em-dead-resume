@@ -1,6 +1,11 @@
 
-from typing import Optional, List
+# ...existing code...
+
+# Rewritten Bullet Schemas
+
+
 from pydantic import BaseModel, EmailStr, Field
+from typing import Optional, List
 
 # Experience Summary Schemas
 
