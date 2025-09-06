@@ -1,4 +1,25 @@
 
+from typing import Optional, List
+from pydantic import BaseModel, EmailStr, Field
+
+# Experience Summary Schemas
+
+class ExperienceSummaryBase(BaseModel):
+    summary: str
+    user_edits: Optional[str] = None
+
+class ExperienceSummaryCreate(ExperienceSummaryBase):
+    pass
+
+class ExperienceSummaryUpdate(ExperienceSummaryBase):
+    pass
+
+class ExperienceSummary(ExperienceSummaryBase):
+    id: int
+    user_id: int
+    class Config:
+        orm_mode = True
+
 from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
 
@@ -119,5 +140,31 @@ class User(UserBase):
     skills: List[Skill] = []
     educations: List[Education] = []
     interests: List[Interest] = []
+    class Config:
+        orm_mode = True
+
+
+# Job Preferences Schemas
+from typing import Optional
+from pydantic import BaseModel
+
+class JobPreferencesBase(BaseModel):
+    relocate: str
+    willing_to_travel: str
+    job_title_1: str
+    job_title_2: Optional[str] = None
+    job_title_3: Optional[str] = None
+    desired_industry_segment: Optional[str] = None
+    career_change: str
+
+class JobPreferencesCreate(JobPreferencesBase):
+    pass
+
+class JobPreferencesUpdate(JobPreferencesBase):
+    pass
+
+class JobPreferences(JobPreferencesBase):
+    id: int
+    user_id: int
     class Config:
         orm_mode = True
