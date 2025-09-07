@@ -7,32 +7,34 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 import app.database as app_database
 
-# Use in-memory SQLite for tests with StaticPool
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-models.Base.metadata.create_all(bind=engine)
 
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Pytest fixture for isolated in-memory DB per test
+@pytest.fixture(scope="function")
+def client():
+    SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool
+    )
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    models.Base.metadata.drop_all(bind=engine)
+    models.Base.metadata.create_all(bind=engine)
 
+    def override_get_db():
+        db = TestingSessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
 
+    app_database.engine = engine
+    app_database.SessionLocal = TestingSessionLocal
+    app = create_app()
+    app.dependency_overrides[database.get_db] = override_get_db
+    return TestClient(app)
 
-app_database.engine = engine
-app_database.SessionLocal = TestingSessionLocal
-app = create_app()
-app.dependency_overrides[database.get_db] = override_get_db
-client = TestClient(app)
-
-def test_experience_summary_crud():
+def test_experience_summary_crud(client):
     # Create user
     user_data = {"name": "Carol", "email": "carol@example.com"}
     r = client.post("/users", json=user_data)

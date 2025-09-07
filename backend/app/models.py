@@ -1,10 +1,11 @@
 
 # --- All imports at the top ---
 from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, ARRAY, JSON
-from sqlalchemy.orm import relationship, declarative_base
-import datetime
+from sqlalchemy.orm import relationship
+from .base import Base
+from .rewritten_bullet_model import RewrittenBullet
 
-Base = declarative_base()
+import datetime
 
 # User Model
 class User(Base):

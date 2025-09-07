@@ -266,7 +266,7 @@ def create_app():
         bullets = rewrite_bullet_with_openai(payload.text)
         # Store each bullet in DB (user_id can be None for now)
         for b in bullets:
-            create_rewritten_bullet(db, original_text=payload.text, rewritten_text=b, user_id=None)
+            create_rewritten_bullet(db, original_bullet=payload.text, rewritten_bullet=b, user_id=None)
         return BulletRewriteResponse(bullets=bullets)
 
 
@@ -391,7 +391,10 @@ app = create_app()
 
 
 # Register /extract_keywords endpoint from api/keyword_extraction
+
 from .api.keyword_extraction import router as keyword_extraction_router
 from .api.tailor_resume import router as tailor_resume_router
+from backend.api.suggest_verbs import router as suggest_verbs_router
 app.include_router(keyword_extraction_router)
 app.include_router(tailor_resume_router)
+app.include_router(suggest_verbs_router)
