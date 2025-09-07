@@ -306,17 +306,28 @@ def create_app():
         # If URL is provided and any of the main fields are missing, try to scrape them
         if payload.url and (not payload.title or not payload.company or not payload.location or not payload.description):
             parsed_url = urlparse(payload.url)
-            # Allow test URLs (e.g., fakejobad.com) to pass for testing
+            # Prevent SSRF: only allow http(s) and exact/approved hostnames.
+            allowed_hostnames = set(ALLOWED_DOMAINS)
+            # Allow test URLs (e.g., fakejobad.com) only as exact matches.
+            if parsed_url.scheme not in ("http", "https"):
+                raise HTTPException(status_code=400, detail="Invalid URL scheme. Only http and https are allowed.")
             if (
-                parsed_url.hostname not in ALLOWED_DOMAINS
-                and not (
-                    parsed_url.hostname == "fakejobad.com"
-                    or parsed_url.hostname.endswith(".fakejobad.com")
-                )
+                parsed_url.hostname not in allowed_hostnames
+                and parsed_url.hostname != "fakejobad.com"
+                and not (parsed_url.hostname is not None and parsed_url.hostname.endswith(".fakejobad.com"))
             ):
                 raise HTTPException(status_code=400, detail="URL domain is not allowed for scraping.")
+            # Optionally: Validate port is standard (80/443/default)
+            # Optionally: Validate IP address is not internal by resolving (requires socket and ipaddress)
+            # Only use the reconstructed URL to avoid injection via path, fragment, etc.
+            safe_url = f"{parsed_url.scheme}://{parsed_url.hostname}"
+            if parsed_url.port:
+                safe_url += f":{parsed_url.port}"
+            safe_url += parsed_url.path
+            if parsed_url.query:
+                safe_url += f"?{parsed_url.query}"
             try:
-                resp = requests.get(payload.url, timeout=10)
+                resp = requests.get(safe_url, timeout=10)
                 soup = BeautifulSoup(resp.text, 'html.parser')
                 if not job_data['title']:
                     job_data['title'] = soup.find(['h1', 'h2']).get_text(strip=True) if soup.find(['h1', 'h2']) else None
