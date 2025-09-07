@@ -15,8 +15,10 @@ export default function KeywordStep({ jobAdId, jobDescription, onKeywordsChange 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ job_description: jobDescription })
       });
+      console.log('fetchKeywords: response', res);
       if (!res.ok) throw new Error("Failed to extract keywords");
       const data = await res.json();
+      console.log('fetchKeywords: data', data);
       setKeywords(data.keywords);
       onKeywordsChange && onKeywordsChange(data.keywords);
     } catch (e) {

@@ -1,4 +1,5 @@
 {
   "testEnvironment": "jsdom",
+  "setupFiles": ["<rootDir>/jest.polyfills.js"],
   "setupFilesAfterEnv": ["<rootDir>/setupTests.js"]
 }

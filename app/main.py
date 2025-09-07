@@ -1,4 +1,4 @@
-# --- MODULE LEVEL FOR TESTABILITY ---
+
 def normalize_keywords(keywords: list[str]) -> list[str]:
     # Deduplicate, lowercase, but preserve domain capitalization (e.g., Python, SQL)
     seen = set()
@@ -406,3 +406,4 @@ app = create_app()
 # Register /extract_keywords endpoint from api/keyword_extraction
 from .api.keyword_extraction import router as keyword_extraction_router
 app.include_router(keyword_extraction_router)
+
