@@ -381,4 +381,6 @@ app = create_app()
 
 # Register /extract_keywords endpoint from api/keyword_extraction
 from .api.keyword_extraction import router as keyword_extraction_router
+from .api.tailor_resume import router as tailor_resume_router
 app.include_router(keyword_extraction_router)
+app.include_router(tailor_resume_router)

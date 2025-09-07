@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import KeywordStep from "./KeywordStep";
+import KeywordStep from "../src/KeywordStep";
 
 // Mock job description
 const jobDescription = "We are seeking a Data Analyst with experience in Python, SQL, and data visualization. Must have strong communication skills and experience with Tableau or Power BI. Familiarity with cloud platforms like AWS is a plus.";

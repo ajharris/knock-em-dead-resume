@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 
+
 export default function KeywordChips({ keywords, onChange, onRegenerate }) {
   const [input, setInput] = useState("");
   const [chips, setChips] = useState(keywords || []);
+
+  React.useEffect(() => {
+    setChips(keywords || []);
+  }, [keywords]);
 
   const addChip = (chip) => {
     if (chip && !chips.includes(chip)) {

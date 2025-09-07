@@ -1,5 +1,16 @@
-# knock-em-dead-resume
+
+# Knock 'Em Dead Resume
+
 An AI-powered resume builder based on Martin Yate’s Knock ’Em Dead formula. It finds job ads, extracts key skills, and helps craft tailored, achievement-driven resumes optimized for each role, with ATS-friendly formatting and AI coaching for stronger career impact.
+
+---
+
+## Project Structure
+
+- **backend/**: FastAPI app, SQLAlchemy models, OpenAI integration, and backend tests
+- **frontend/**: React app, MSW for API mocking, Jest/Testing Library for frontend tests
+
+---
 
 ## Features
 - AI-powered resume generation and optimization
@@ -8,34 +19,67 @@ An AI-powered resume builder based on Martin Yate’s Knock ’Em Dead formula. 
 - Achievement-driven resume suggestions
 - AI coaching for career impact
 
-## Installation
+---
+
+## Setup & Installation
+
+### 1. Clone the repository
 ```bash
-# Clone the repository
 git clone https://github.com/ajharris/knock-em-dead-resume.git
 cd knock-em-dead-resume
-# Install dependencies (update this section based on your stack)
-npm install
-# or
-yarn install
 ```
+
+### 2. Backend Setup
+```bash
+cd backend
+# (Recommended) Create a virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r ../requirements.txt
+# Run backend tests
+pytest
+```
+
+### 3. Frontend Setup
+```bash
+cd ../frontend
+npm install
+# Run frontend tests
+npm test
+# Start the frontend (Vite)
+
+```
+
+---
+
+## Running All Tests
+From the project root:
+```bash
+./test_all.sh
+```
+This will run both backend and frontend tests.
+
+---
 
 ## Usage
-```bash
-# Start the development server (update as needed)
-npm start
-# or
-yarn start
-```
-Then open your browser and navigate to `http://localhost:3000`.
+
+1. Start the backend API (see backend/app/main.py for FastAPI entrypoint)
+2. Start the frontend (Vite dev server)
+3. Open your browser to the provided local address (default: http://localhost:3000)
+
+---
 
 ## Technologies Used
-- React
-- Node.js
-- OpenAI API (or other AI/ML services)
-- [Add any other relevant technologies]
+- FastAPI, SQLAlchemy, Alembic (backend)
+- React, Vite, MSW, Jest, Testing Library (frontend)
+- OpenAI API (AI/ML integration)
+
+---
 
 ## Contributing
 Contributions are welcome! Please open issues or submit pull requests for improvements and bug fixes.
+
+---
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

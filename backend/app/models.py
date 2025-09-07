@@ -1,10 +1,10 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text
+
+# --- All imports at the top ---
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, ARRAY, JSON
 from sqlalchemy.orm import relationship, declarative_base
+import datetime
 
 Base = declarative_base()
-
-from sqlalchemy import Column, Integer, String, ForeignKey, Text
-from sqlalchemy.orm import relationship, declarative_base
 
 # User Model
 class User(Base):
@@ -111,9 +111,23 @@ class Education(Base):
     school = relationship('School', back_populates='educations')
     program = relationship('Program', back_populates='educations')
 
-# JobAd Model
-from sqlalchemy import DateTime, ARRAY
-import datetime
+ # ...existing code...
+
+# TailoredResume Model
+class TailoredResume(Base):
+    __tablename__ = 'tailored_resumes'
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    jobad_id = Column(Integer, ForeignKey('job_ads.id'), nullable=False)
+    summary = Column(Text, nullable=False)
+    experience = Column(JSON, nullable=False)
+    skills = Column(JSON, nullable=False)
+    education = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    user = relationship('User')
+    jobad = relationship('JobAd')
 
 class JobAd(Base):
     __tablename__ = 'job_ads'
@@ -125,8 +139,8 @@ class JobAd(Base):
     company = Column(String, nullable=True)
     location = Column(String, nullable=True)
     description = Column(Text, nullable=True)
+
     skills = Column(Text, nullable=True)  # Store as comma-separated string for portability
-    from sqlalchemy import JSON
     keywords = Column(JSON, nullable=True)  # Store as JSON array for cross-db compatibility
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 

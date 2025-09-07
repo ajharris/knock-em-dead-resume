@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import JobPreferencesForm from './JobPreferencesForm';
+import JobPreferencesForm from '../src/JobPreferencesForm';
 
 describe('JobPreferencesForm', () => {
   it('renders all fields and submits data', async () => {
