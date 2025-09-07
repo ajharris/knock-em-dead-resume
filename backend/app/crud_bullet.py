@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 from .rewritten_bullet_model import RewrittenBullet
 
-def create_rewritten_bullet(db: Session, original_text: str, rewritten_text: str, user_id: int = None):
+def create_rewritten_bullet(db: Session, original_bullet: str, rewritten_bullet: str, user_id: int = None):
     bullet = RewrittenBullet(
-        original_text=original_text,
-        rewritten_text=rewritten_text,
+        original_bullet=original_bullet,
+        rewritten_bullet=rewritten_bullet,
         user_id=user_id
     )
     db.add(bullet)

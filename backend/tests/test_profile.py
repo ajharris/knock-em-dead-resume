@@ -1,4 +1,5 @@
 
+
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -6,33 +7,40 @@ from app import models, database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-import os
 
-# Use in-memory SQLite for tests with StaticPool
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-models.Base.metadata.create_all(bind=engine)
+@pytest.fixture
+def in_memory_db():
+    # Use a new in-memory SQLite DB for each test
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool
+    )
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    # Drop and create all tables for isolation
+    models.Base.metadata.drop_all(bind=engine)
+    models.Base.metadata.create_all(bind=engine)
+    # Patch app.database to use test engine/session
+    import app.database as app_database
+    app_database.engine = engine
+    app_database.SessionLocal = TestingSessionLocal
+    def override_get_db():
+        db = TestingSessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+    app.dependency_overrides[database.get_db] = override_get_db
+    yield
+    # Clean up
+    models.Base.metadata.drop_all(bind=engine)
 
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+@pytest.fixture
+def client(in_memory_db):
+    with TestClient(app) as c:
+        yield c
 
-# Patch app.database to use test engine/session
-import app.database as app_database
-app_database.engine = engine
-app_database.SessionLocal = TestingSessionLocal
-app.dependency_overrides[database.get_db] = override_get_db
-client = TestClient(app)
-
-def test_profile_endpoints():
+def test_profile_endpoints(client):
     # Create user via API
     user_data = {"name": "Alice", "email": "alice@example.com"}
     r = client.post("/users", json=user_data)
