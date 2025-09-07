@@ -393,12 +393,15 @@ app = create_app()
 # Register /extract_keywords endpoint from api/keyword_extraction
 
 
+
 from .api.keyword_extraction import router as keyword_extraction_router
 from .api.tailor_resume import router as tailor_resume_router
+from .api.style_tips import router as style_tips_router
 from backend.api.suggest_verbs import router as suggest_verbs_router
 from backend.api.compare_skills import router as compare_skills_router
 
 app.include_router(keyword_extraction_router)
 app.include_router(tailor_resume_router)
+app.include_router(style_tips_router)
 app.include_router(suggest_verbs_router)
 app.include_router(compare_skills_router)
