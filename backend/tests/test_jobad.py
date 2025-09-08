@@ -25,7 +25,7 @@ def client():
 
 def test_create_job_ad(client, test_db):
     # Create a user first
-    user_resp = client.post("/users", json={"name": "Test User", "email": "testuser@example.com"})
+    user_resp = client.post("/users", json={"name": "Test User", "email": "testuser@example.com", "password": "dummy123"})
     assert user_resp.status_code == 200
     user_id = user_resp.json()["id"]
     # Mock job ad input
@@ -50,7 +50,7 @@ def test_create_job_ad(client, test_db):
 
 def test_create_job_ad_from_url(client, test_db, monkeypatch):
     """Test job ad creation by scraping a job ad URL (mocked HTML)."""
-    user_resp = client.post("/users", json={"name": "URL User", "email": "urluser@example.com"})
+    user_resp = client.post("/users", json={"name": "URL User", "email": "urluser@example.com", "password": "dummy123"})
     user_id = user_resp.json()["id"]
     # Mock requests.get to return sample HTML
     class MockResp:
@@ -78,7 +78,7 @@ def test_create_job_ad_from_url(client, test_db, monkeypatch):
 
 def test_create_job_ad_from_api(client, test_db):
     """Test job ad creation from API source (mocked for MVP)."""
-    user_resp = client.post("/users", json={"name": "API User", "email": "apiuser@example.com"})
+    user_resp = client.post("/users", json={"name": "API User", "email": "apiuser@example.com", "password": "dummy123"})
     user_id = user_resp.json()["id"]
     # For MVP, simulate API by sending source='indeed' and prefilled fields
     job_ad = {
@@ -102,7 +102,7 @@ def test_create_job_ad_from_api(client, test_db):
 
 def test_ai_keyword_extraction(client, test_db):
     """Test that keywords are extracted from description (AI stub)."""
-    user_resp = client.post("/users", json={"name": "AI User", "email": "aiuser@example.com"})
+    user_resp = client.post("/users", json={"name": "AI User", "email": "aiuser@example.com", "password": "dummy123"})
     user_id = user_resp.json()["id"]
     job_ad = {
         "user_id": user_id,

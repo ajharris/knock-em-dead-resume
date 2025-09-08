@@ -36,7 +36,7 @@ def client():
 
 def test_experience_summary_crud(client):
     # Create user
-    user_data = {"name": "Carol", "email": "carol@example.com"}
+    user_data = {"name": "Carol", "email": "carol@example.com", "password": "dummy123"}
     r = client.post("/users", json=user_data)
     assert r.status_code == 200
     user_id = r.json()["id"]

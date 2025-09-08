@@ -1,3 +1,34 @@
+def extract_keywords_with_openai(text: str) -> list[str]:
+    """
+    Calls OpenAI API to extract keywords from a job description or resume text.
+    Returns a list of keywords.
+    """
+    prompt = f"""
+Extract the most important keywords (skills, technologies, certifications, job titles, etc.) from the following text. Return them as a Python list of strings.
+
+Input: {text}
+
+Output: Python list of keywords:
+"""
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are an expert resume and job description analyzer."},
+            {"role": "user", "content": prompt},
+        ],
+        max_tokens=256,
+        temperature=0.2,
+    )
+    content = response.choices[0].message.content.strip()
+    # Try to eval the output as a Python list
+    try:
+        keywords = eval(content)
+        if isinstance(keywords, list):
+            return [str(k).strip() for k in keywords]
+    except Exception:
+        pass
+    # Fallback: split by comma
+    return [k.strip() for k in content.split(",") if k.strip()]
 import os
 from openai import OpenAI
 from dotenv import load_dotenv

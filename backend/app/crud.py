@@ -3,6 +3,16 @@ from sqlalchemy.orm import Session
 from . import models, schemas
 from fastapi import HTTPException
 
+def create_job_preferences(db: Session, user_id: int, prefs: schemas.JobPreferencesCreate):
+    db_prefs = models.JobPreferences(user_id=user_id, **prefs.dict())
+    db.add(db_prefs)
+    db.commit()
+    db.refresh(db_prefs)
+    return db_prefs
+
+def get_job_preferences(db: Session, user_id: int):
+    return db.query(models.JobPreferences).filter(models.JobPreferences.user_id == user_id).first()
+
 def create_job_ad(db: Session, job_ad: schemas.JobAdCreate):
     # Convert skills list to comma-separated string for DB
     db_job_ad = models.JobAd(
