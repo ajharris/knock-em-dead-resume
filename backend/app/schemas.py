@@ -1,4 +1,14 @@
 
+from datetime import datetime
+from pydantic import BaseModel
+
+# --- Bullet Rewrite Schemas ---
+class BulletRewriteRequest(BaseModel):
+    text: str
+
+class BulletRewriteResponse(BaseModel):
+    bullets: list[str]
+
 # ...existing code...
 
 # Rewritten Bullet Schemas
@@ -136,8 +146,25 @@ class UserBase(BaseModel):
     name: str
     email: EmailStr
 
+
 class UserCreate(UserBase):
-    pass
+    password: str
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    linkedin: Optional[str] = None
+    github: Optional[str] = None
+
+class UserProfile(UserBase):
+    id: int
+    phone: Optional[str] = None
+    linkedin: Optional[str] = None
+    github: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    class Config:
+        orm_mode = True
 
 class User(UserBase):
     id: int

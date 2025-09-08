@@ -37,7 +37,7 @@ def client():
 
 
 def create_minimal_user(client):
-    user_data = {"name": "Test User", "email": "test@example.com"}
+    user_data = {"name": "Test User", "email": "test@example.com", "password": "dummy123"}
     r = client.post("/users", json=user_data)
     assert r.status_code == 200
     return r.json()["id"]

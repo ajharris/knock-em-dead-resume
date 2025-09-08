@@ -33,7 +33,7 @@ def client():
     return TestClient(app)
 def test_job_preferences_crud(client):
     # Create user
-    user_data = {"name": "Bob", "email": "bob@example.com"}
+    user_data = {"name": "Bob", "email": "bob@example.com", "password": "dummy123"}
     r = client.post("/users", json=user_data)
     assert r.status_code == 200
     user_id = r.json()["id"]

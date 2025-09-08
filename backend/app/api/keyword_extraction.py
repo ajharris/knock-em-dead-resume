@@ -1,10 +1,10 @@
+
 from fastapi import APIRouter, Body, Depends, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from ..database import SessionLocal
-import app.main as main_mod
-normalize_keywords = main_mod.normalize_keywords
-extract_keywords_with_openai = main_mod.extract_keywords_with_openai
+from ..ai_bullet_rewriter import extract_keywords_with_openai
+from app.utils import normalize_keywords
 from .. import schemas
 
 router = APIRouter()

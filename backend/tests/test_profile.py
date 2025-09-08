@@ -42,7 +42,7 @@ def client(in_memory_db):
 
 def test_profile_endpoints(client):
     # Create user via API
-    user_data = {"name": "Alice", "email": "alice@example.com"}
+    user_data = {"name": "Alice", "email": "alice@example.com", "password": "dummy123"}
     r = client.post("/users", json=user_data)
     assert r.status_code == 200
     user_id = r.json()["id"]
