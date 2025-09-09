@@ -1,3 +1,6 @@
+pyasn1==0.4.8
+fsspec==2025.3.2
+cryptography==44.0.3
 alembic==1.16.5
 annotated-types==0.7.0
 anyio==4.10.0
