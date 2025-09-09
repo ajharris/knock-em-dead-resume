@@ -24,7 +24,13 @@ from backend.api.suggest_verbs import router as suggest_verbs_router
 from backend.api.compare_skills import router as compare_skills_router
 from app.resume_export import router as resume_export_router
 
+
 app = FastAPI()
+
+# Root endpoint for health check or landing
+@app.get("/")
+def read_root():
+    return {"message": "API is running"}
 
 
 @app.post("/programs", response_model=schemas.Program)
