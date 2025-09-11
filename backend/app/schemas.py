@@ -1,3 +1,24 @@
+# Resume Schemas
+from uuid import UUID
+from typing import Any
+
+class ResumeBase(BaseModel):
+    title: str
+    content: Any
+
+class ResumeCreate(ResumeBase):
+    pass
+
+class ResumeUpdate(ResumeBase):
+    pass
+
+class Resume(ResumeBase):
+    id: UUID
+    user_id: int
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        orm_mode = True
 
 from datetime import datetime
 from pydantic import BaseModel
