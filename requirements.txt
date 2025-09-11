@@ -15,4 +15,5 @@ python-dotenv
 requests
 sqlalchemy
 uvicorn
+email-validator
 weasyprint
