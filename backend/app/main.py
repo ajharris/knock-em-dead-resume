@@ -98,6 +98,7 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 # Register all routers at module level
+from app.api.resume import router as resume_router
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(keyword_extraction_router)
@@ -107,6 +108,7 @@ app.include_router(suggest_verbs_router)
 app.include_router(compare_skills_router)
 app.include_router(linkedin_router)
 app.include_router(resume_export_router)
+app.include_router(resume_router)
 
 # ...existing code...
 

@@ -1,0 +1,25 @@
+# .github/workflows/heroku-postgres.yml
+name: Deploy Postgres DB to Heroku
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          pip install alembic psycopg2-binary
+      - name: Run Alembic migrations on Heroku Postgres
+        env:
+          DATABASE_URL: ${{ secrets.HEROKU_POSTGRESQL_URL }}
+        run: |
+          alembic -c alembic.ini upgrade head
