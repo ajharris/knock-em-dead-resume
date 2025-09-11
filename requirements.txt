@@ -70,7 +70,7 @@ distributed
 distro
 dmglib
 dnspython
-docstring
+
 docutils
 ecdsa
 email
