@@ -6,7 +6,7 @@ alembic
 bcrypt
 beautifulsoup4
 fastapi
-jose
+python-jose
 openai
 passlib
 psycopg2
