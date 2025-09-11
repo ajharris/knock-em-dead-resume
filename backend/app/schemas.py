@@ -1,6 +1,8 @@
-# Resume Schemas
+
+from pydantic import BaseModel
 from uuid import UUID
 from typing import Any
+
 
 class ResumeBase(BaseModel):
     title: str
@@ -20,8 +22,8 @@ class Resume(ResumeBase):
     class Config:
         orm_mode = True
 
+
 from datetime import datetime
-from pydantic import BaseModel
 
 # --- Bullet Rewrite Schemas ---
 class BulletRewriteRequest(BaseModel):
@@ -35,7 +37,8 @@ class BulletRewriteResponse(BaseModel):
 # Rewritten Bullet Schemas
 
 
-from pydantic import BaseModel, EmailStr, Field
+
+from pydantic import EmailStr, Field
 from typing import Optional, List
 
 # Experience Summary Schemas
