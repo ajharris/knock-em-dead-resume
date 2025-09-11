@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 
 
-import Stepper from "./Stepper";
+import StepWizard from "./components/StepWizard";
 import LandingPage from "./LandingPage";
 import BulletRewriter from "./BulletRewriter";
 import ResumeEditor from "./ResumeEditor";
@@ -43,7 +43,7 @@ function App() {
         token={token}
       />
       <BulletRewriter />
-      {started ? <Stepper /> : <LandingPage onStart={() => setStarted(true)} />}
+  {started ? <StepWizard /> : <LandingPage onStart={() => setStarted(true)} />}
     </div>
   );
 }
