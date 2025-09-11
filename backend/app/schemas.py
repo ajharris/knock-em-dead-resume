@@ -1,7 +1,9 @@
 
+
 from pydantic import BaseModel
 from uuid import UUID
 from typing import Any
+from datetime import datetime
 
 
 class ResumeBase(BaseModel):
@@ -14,6 +16,7 @@ class ResumeCreate(ResumeBase):
 class ResumeUpdate(ResumeBase):
     pass
 
+
 class Resume(ResumeBase):
     id: UUID
     user_id: int
@@ -22,8 +25,6 @@ class Resume(ResumeBase):
     class Config:
         orm_mode = True
 
-
-from datetime import datetime
 
 # --- Bullet Rewrite Schemas ---
 class BulletRewriteRequest(BaseModel):
