@@ -4,7 +4,8 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, ARRA
 from sqlalchemy.orm import relationship
 from .base import Base
 from .rewritten_bullet_model import RewrittenBullet
-
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
 import datetime
 
 # User Model
@@ -119,6 +120,20 @@ class Education(Base):
     program = relationship('Program', back_populates='educations')
 
  # ...existing code...
+
+# Resume Model for multiple versions per user
+
+
+class Resume(Base):
+    __tablename__ = 'resumes'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    title = Column(String, nullable=False)
+    content = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
+
+    user = relationship('User', backref='resumes')
 
 # TailoredResume Model
 class TailoredResume(Base):
