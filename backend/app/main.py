@@ -23,6 +23,7 @@ from app.api.style_tips import router as style_tips_router
 from backend.api.suggest_verbs import router as suggest_verbs_router
 from backend.api.compare_skills import router as compare_skills_router
 from app.resume_export import router as resume_export_router
+from backend.api.scan_resume import scan_resume_bp
 
 
 app = FastAPI()
@@ -109,8 +110,6 @@ app.include_router(compare_skills_router)
 app.include_router(linkedin_router)
 app.include_router(resume_export_router)
 app.include_router(resume_router)
-
-# ...existing code...
 
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
@@ -285,3 +284,13 @@ def create_job_ad(
     if job_ad_dict.get('keywords') is None:
         job_ad_dict['keywords'] = []
     return schemas.JobAd.model_validate(job_ad_dict)
+
+def register_flask_endpoints(app):
+    # Register Flask blueprints on the FastAPI app using WSGIMiddleware if needed
+    from fastapi.middleware.wsgi import WSGIMiddleware
+    from flask import Flask
+    flask_app = Flask(__name__)
+    flask_app.register_blueprint(scan_resume_bp)
+    app.mount('/flask', WSGIMiddleware(flask_app))
+
+register_flask_endpoints(app)

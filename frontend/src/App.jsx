@@ -7,12 +7,15 @@ import LandingPage from "./LandingPage";
 import BulletRewriter from "./BulletRewriter";
 import ResumeEditor from "./ResumeEditor";
 import MyResumesDashboard from "./MyResumesDashboard";
+import JobAdScanner from "./JobAdScanner";
+
 
 
 function App() {
   const [started, setStarted] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
   const [selectedResume, setSelectedResume] = useState(null);
+  const [showScanner, setShowScanner] = useState(false);
   // TODO: Replace with real auth token logic
   const token = window.localStorage.getItem('token') || 'demo-token';
 
@@ -27,9 +30,14 @@ function App() {
 
   return (
     <div>
-      <button onClick={() => setShowDashboard((v) => !v)}>
-        {showDashboard ? 'Hide' : 'Show'} My Resumes
-      </button>
+      <div className="flex gap-2 mb-4">
+        <button onClick={() => setShowDashboard((v) => !v)} className="bg-gray-200 px-3 py-1 rounded">
+          {showDashboard ? 'Hide' : 'Show'} My Resumes
+        </button>
+        <button onClick={() => setShowScanner((v) => !v)} className="bg-blue-200 px-3 py-1 rounded">
+          {showScanner ? 'Hide' : 'Show'} Job Ad Scanner
+        </button>
+      </div>
       {showDashboard && (
         <MyResumesDashboard
           token={token}
@@ -43,7 +51,8 @@ function App() {
         token={token}
       />
       <BulletRewriter />
-  {started ? <StepWizard /> : <LandingPage onStart={() => setStarted(true)} />}
+      {showScanner && <JobAdScanner />}
+      {!showScanner && (started ? <StepWizard /> : <LandingPage onStart={() => setStarted(true)} />)}
     </div>
   );
 }
