@@ -1,3 +1,7 @@
+def require_pro_user(current_user):
+    if current_user.tier != "pro":
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Pro subscription required.")
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import JWTError, jwt

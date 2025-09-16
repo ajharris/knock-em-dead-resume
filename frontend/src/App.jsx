@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 
 
@@ -8,6 +7,7 @@ import BulletRewriter from "./BulletRewriter";
 import ResumeEditor from "./ResumeEditor";
 import MyResumesDashboard from "./MyResumesDashboard";
 import JobAdScanner from "./JobAdScanner";
+import { TierBanner } from "./components/TierBanner";
 
 
 
@@ -18,6 +18,8 @@ function App() {
   const [showScanner, setShowScanner] = useState(false);
   // TODO: Replace with real auth token logic
   const token = window.localStorage.getItem('token') || 'demo-token';
+  // TODO: Replace with real user tier logic
+  const tier = window.localStorage.getItem('tier') || 'free';
 
   const handleView = (resume) => {
     setSelectedResume({ ...resume, readOnly: true });
@@ -30,6 +32,7 @@ function App() {
 
   return (
     <div>
+      <TierBanner tier={tier} />
       <div className="flex gap-2 mb-4">
         <button onClick={() => setShowDashboard((v) => !v)} className="bg-gray-200 px-3 py-1 rounded">
           {showDashboard ? 'Hide' : 'Show'} My Resumes
