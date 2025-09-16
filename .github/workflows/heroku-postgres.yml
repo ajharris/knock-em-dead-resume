@@ -1,5 +1,7 @@
 # .github/workflows/heroku-postgres.yml
 name: Deploy Postgres DB to Heroku
+permissions:
+  contents: read
 
 on:
   push:
