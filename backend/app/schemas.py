@@ -1,5 +1,3 @@
-
-
 from pydantic import BaseModel
 from uuid import UUID
 from typing import Any
@@ -32,8 +30,6 @@ class BulletRewriteRequest(BaseModel):
 
 class BulletRewriteResponse(BaseModel):
     bullets: list[str]
-
-# ...existing code...
 
 # Rewritten Bullet Schemas
 
@@ -247,3 +243,24 @@ class JobAd(JobAdBase):
     created_at: datetime
     keywords: Optional[list[str]] = None
     model_config = {"from_attributes": True}
+
+class StationOut(BaseModel):
+    id: int
+    name: str
+    location: str
+    type: str
+    is_public: int
+    host_id: int | None = None
+    price: int | None = None
+    rating: int | None = None
+    availability: str | None = None
+    class Config:
+        orm_mode = True
+
+class BookingOut(BaseModel):
+    id: int
+    user_id: int
+    station_id: int
+    created_at: datetime
+    class Config:
+        orm_mode = True

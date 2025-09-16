@@ -1,3 +1,25 @@
+# Booking Model
+class Booking(Base):
+    __tablename__ = 'bookings'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    station_id = Column(Integer, ForeignKey('stations.id'), nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    user = relationship('User')
+    station = relationship('Station')
+# Charging Station Model
+class Station(Base):
+    __tablename__ = 'stations'
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    location = Column(String, nullable=False)
+    type = Column(String, nullable=False)  # e.g., 'public', 'private'
+    is_public = Column(Integer, nullable=False, default=1)  # 1 for public, 0 for private
+    host_id = Column(Integer, ForeignKey('users.id'), nullable=True)  # For private stations
+    price = Column(Integer, nullable=True)
+    rating = Column(Integer, nullable=True)
+    availability = Column(String, nullable=True)
+    host = relationship('User', backref='stations')
 
 # --- All imports at the top ---
 from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, ARRAY, JSON
@@ -27,6 +49,7 @@ class User(Base):
     job_preferences = relationship('JobPreferences', back_populates='user', uselist=False, cascade="all, delete-orphan")
     experience_summary = relationship('ExperienceSummary', back_populates='user', uselist=False, cascade="all, delete-orphan")
     rewritten_bullets = relationship('RewrittenBullet', back_populates='user', cascade="all, delete-orphan")
+    tier = Column(String, nullable=False, default='free')  # 'free' or 'pro'
 # Experience Summary Model
 class ExperienceSummary(Base):
     __tablename__ = 'experience_summaries'
