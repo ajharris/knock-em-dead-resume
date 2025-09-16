@@ -17,6 +17,7 @@ from app.crud_bullet import create_rewritten_bullet
 from app.api.auth import router as auth_router
 from app.api.user import router as user_router
 from app.linkedin_oauth import router as linkedin_router
+from app.oauth_providers import router as oauth_router
 from app.api.keyword_extraction import router as keyword_extraction_router
 from app.api.tailor_resume import router as tailor_resume_router
 from app.api.style_tips import router as style_tips_router
@@ -108,6 +109,7 @@ app.include_router(style_tips_router)
 app.include_router(suggest_verbs_router)
 app.include_router(compare_skills_router)
 app.include_router(linkedin_router)
+app.include_router(oauth_router)
 app.include_router(resume_export_router)
 app.include_router(resume_router)
 

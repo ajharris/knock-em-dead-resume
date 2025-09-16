@@ -34,8 +34,23 @@ def linkedin_login():
 
 @router.get("/auth/linkedin/callback")
 def linkedin_callback(request: Request, code: str = None, state: str = None, db: Session = Depends(get_db)):
+    import json
+    def popup_response(success, user=None, error=None):
+        if success:
+            payload = {"type": "oauth-success", "user": user}
+        else:
+            payload = {"type": "oauth-error", "error": error}
+        return (
+            f"""
+            <html><body><script>
+            window.opener && window.opener.postMessage({json.dumps(payload)}, window.origin);
+            window.close();
+            </script></body></html>
+            """
+        )
+
     if not code:
-        raise HTTPException(status_code=400, detail="No code provided")
+        return popup_response(False, error="No code provided")
     # Exchange code for access token
     token_url = "https://www.linkedin.com/oauth/v2/accessToken"
     data = {
@@ -47,7 +62,7 @@ def linkedin_callback(request: Request, code: str = None, state: str = None, db:
     }
     resp = requests.post(token_url, data=data, headers={"Content-Type": "application/x-www-form-urlencoded"})
     if resp.status_code != 200:
-        raise HTTPException(status_code=400, detail="Failed to get access token")
+        return popup_response(False, error="Failed to get access token")
     access_token = resp.json().get("access_token")
     # Fetch user info
     profile_resp = requests.get(
@@ -59,7 +74,7 @@ def linkedin_callback(request: Request, code: str = None, state: str = None, db:
         headers={"Authorization": f"Bearer {access_token}"}
     )
     if profile_resp.status_code != 200 or email_resp.status_code != 200:
-        raise HTTPException(status_code=400, detail="Failed to fetch user info from LinkedIn")
+        return popup_response(False, error="Failed to fetch user info from LinkedIn")
     profile = profile_resp.json()
     email = email_resp.json()["elements"][0]["handle~"]["emailAddress"]
     # Upsert user
@@ -69,4 +84,5 @@ def linkedin_callback(request: Request, code: str = None, state: str = None, db:
         db.add(user)
         db.commit()
         db.refresh(user)
-    return {"user_id": user.id, "email": user.email, "name": user.name}
+    avatar = None  # LinkedIn basic profile does not provide avatar in this scope
+    return popup_response(True, user={"user_id": user.id, "email": user.email, "name": user.name, "avatar": avatar})
