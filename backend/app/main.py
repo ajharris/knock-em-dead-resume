@@ -293,6 +293,8 @@ def register_flask_endpoints(app):
     from flask import Flask
     flask_app = Flask(__name__)
     flask_app.register_blueprint(scan_resume_bp)
+    from backend.api.stripe import stripe_bp
+    flask_app.register_blueprint(stripe_bp)
     app.mount('/flask', WSGIMiddleware(flask_app))
 
 register_flask_endpoints(app)
