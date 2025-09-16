@@ -13,18 +13,19 @@ beforeEach(() => {
 
 afterEach(() => {
   global.fetch.mockClear();
+  jest.restoreAllMocks();
 });
 
 test('calls backend and redirects to Stripe', async () => {
-  const assignMock = jest.fn();
-  delete window.location;
-  window.location = { assign: assignMock };
+  const openMock = jest.spyOn(window, 'open').mockImplementation(() => {});
 
   render(<PaymentForm stationId={1} stationName="Test" price={10} userId={1} />);
   const btn = screen.getByText(/Pay \$10/);
   fireEvent.click(btn);
 
   await waitFor(() => {
-    expect(assignMock).toHaveBeenCalledWith('https://stripe.test/session');
+    expect(openMock).toHaveBeenCalledWith('https://stripe.test/session', '_self');
   });
+
+  openMock.mockRestore();
 });
