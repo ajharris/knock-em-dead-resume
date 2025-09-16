@@ -9,7 +9,7 @@ function PaymentForm({ stationId, stationName, price, userId }) {
     });
     const data = await res.json();
     if (data.url) {
-      window.location.href = data.url;
+      window.open(data.url, '_self');
     } else {
       alert("Payment failed to initialize");
     }
