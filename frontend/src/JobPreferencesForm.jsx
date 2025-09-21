@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import axios from "axios";
-import API_BASE from "./services/apiBase";
+let API_BASE;
+if (typeof window !== 'undefined') {
+  import('./services/apiBase').then(mod => { API_BASE = mod.default; });
+} else {
+  API_BASE = require('./services/apiBase').default;
+}
 
 export default function JobPreferencesForm({ userId, onComplete }) {
   const [form, setForm] = useState({

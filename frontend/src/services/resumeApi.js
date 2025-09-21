@@ -1,6 +1,11 @@
 
 import axios from 'axios';
-import API_BASE from './apiBase';
+let API_BASE;
+if (typeof window !== 'undefined') {
+  import('./apiBase').then(mod => { API_BASE = mod.default; });
+} else {
+  API_BASE = require('./apiBase').default;
+}
 
 export async function deleteResume(id, token) {
   return axios.delete(`${API_BASE}/resumes/${id}`, {

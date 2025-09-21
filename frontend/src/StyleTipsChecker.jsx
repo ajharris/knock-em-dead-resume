@@ -17,7 +17,7 @@ export default function StyleTipsChecker({ resumeText }) {
     setLoading(true);
     setError("");
     try {
-      const API_BASE = (await import("./services/apiBase")).default;
+  const API_BASE = (await import("./services/apiBase")).default;
       const res = await fetch(`${API_BASE}/api/style_tips`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

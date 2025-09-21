@@ -6,7 +6,7 @@ export default function StationMap() {
   const tier = window.localStorage.getItem('tier') || 'free';
 
   useEffect(() => {
-    import("./services/apiBase").then(({ default: API_BASE }) => {
+  import("./services/apiBase").then(({ default: API_BASE }) => {
       fetch(`${API_BASE}/api/stations`, {
         headers: { Authorization: `Bearer ${window.localStorage.getItem('token')}` }
       })

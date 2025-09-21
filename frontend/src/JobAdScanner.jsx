@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import API_BASE from './services/apiBase';
+let API_BASE;
+if (typeof window !== 'undefined') {
+  // Browser: use dynamic import
+  import('./services/apiBase').then(mod => { API_BASE = mod.default; });
+} else {
+  // Node/Jest: use require
+  API_BASE = require('./services/apiBase').default;
+}
 
 const JobAdScanner = () => {
   const [jobAdFile, setJobAdFile] = useState(null);

@@ -7,7 +7,8 @@ from backend.app.base import Base
 
 
 # Get the database URL from the environment variable
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:postgres@localhost/resume_db")
+# Use SQLite for local testing by default
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
 # Heroku compatibility: convert postgres:// to postgresql://
 if DATABASE_URL.startswith("postgres://"):
 	DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)

@@ -10,7 +10,7 @@ export default function KeywordStep({ jobAdId, jobDescription, onKeywordsChange 
     setLoading(true);
     setError(null);
     try {
-      const API_BASE = (await import("./services/apiBase")).default;
+  const API_BASE = (await import("./services/apiBase")).default;
       const res = await fetch(`${API_BASE}/extract_keywords`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -13,6 +13,8 @@ fi
 
 # Frontend tests
 if [ -d frontend/src/tests ]; then
+  echo "Installing frontend dependencies..."
+  npm install --prefix frontend
   echo "Running frontend tests..."
   npm test --prefix frontend
 else
