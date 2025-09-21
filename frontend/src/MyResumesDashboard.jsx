@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import API_BASE from './services/apiBase';
 import { deleteResume, duplicateResume, renameResume } from './services/resumeApi';
 
 
@@ -12,7 +13,7 @@ function MyResumesDashboard({ token, onView, onEdit }) {
 
   const fetchResumes = () => {
     setLoading(true);
-    axios.get('/resumes', {
+  axios.get(`${API_BASE}/resumes`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {

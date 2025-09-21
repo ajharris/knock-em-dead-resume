@@ -1,12 +1,14 @@
+
+# --- All imports at the top ---
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, ARRAY, JSON
+from sqlalchemy.orm import relationship
+from .base import Base
+from .rewritten_bullet_model import RewrittenBullet
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
+import datetime
+
 # Booking Model
-class Booking(Base):
-    __tablename__ = 'bookings'
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    station_id = Column(Integer, ForeignKey('stations.id'), nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
-    user = relationship('User')
-    station = relationship('Station')
 # Charging Station Model
 class Station(Base):
     __tablename__ = 'stations'
@@ -20,15 +22,6 @@ class Station(Base):
     rating = Column(Integer, nullable=True)
     availability = Column(String, nullable=True)
     host = relationship('User', backref='stations')
-
-# --- All imports at the top ---
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, ARRAY, JSON
-from sqlalchemy.orm import relationship
-from .base import Base
-from .rewritten_bullet_model import RewrittenBullet
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
-import datetime
 
 # User Model
 class User(Base):

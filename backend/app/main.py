@@ -1,35 +1,138 @@
-from fastapi import FastAPI, Depends, HTTPException, Body, status
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
+
+
+
+# --- Standard Library Imports ---
 import os
 import re
 import json
 from typing import List
+
+# --- Third-Party Imports ---
 import requests
+from fastapi import FastAPI, Depends, HTTPException, Body, status
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
-from app import models, schemas, database, crud
-from app.schemas import BulletRewriteRequest, BulletRewriteResponse
-from app.database import get_db
-from app.ai_bullet_rewriter import client as openai_client, rewrite_bullet_with_openai
-from app.crud_bullet import create_rewritten_bullet
-from app.api.auth import router as auth_router
-from app.api.user import router as user_router
-from app.linkedin_oauth import router as linkedin_router
-from app.oauth_providers import router as oauth_router
-from app.api.keyword_extraction import router as keyword_extraction_router
-from app.api.tailor_resume import router as tailor_resume_router
-from app.api.style_tips import router as style_tips_router
+from pydantic import BaseModel
+
+# --- Project Imports ---
+from backend.app import models, schemas, database, crud
+from backend.app.schemas import (
+    BulletRewriteRequest, BulletRewriteResponse,
+    JobPreferences, JobPreferencesCreate, Skill, SkillCreate,
+    Education, EducationCreate
+)
+from backend.app.database import get_db
+from backend.app.ai_bullet_rewriter import client as openai_client, rewrite_bullet_with_openai
+from backend.app.crud_bullet import create_rewritten_bullet
+from backend.app.api.auth import router as auth_router
+from backend.app.api.user import router as user_router
+from backend.app.linkedin_oauth import router as linkedin_router
+from backend.app.oauth_providers import router as oauth_router
+from backend.app.api.keyword_extraction import router as keyword_extraction_router
+from backend.app.api.tailor_resume import router as tailor_resume_router
+from backend.app.api.style_tips import router as style_tips_router
 from backend.api.suggest_verbs import router as suggest_verbs_router
 from backend.api.compare_skills import router as compare_skills_router
-from app.resume_export import router as resume_export_router
+from backend.app.resume_export import router as resume_export_router
 from backend.api.scan_resume import scan_resume_bp
+from backend.app.api.resume import router as resume_router
 
 
 app = FastAPI()
 
-# Root endpoint for health check or landing
+
+# --- Register Routers ---
+app.include_router(auth_router)
+app.include_router(user_router)
+app.include_router(keyword_extraction_router)
+app.include_router(tailor_resume_router)
+app.include_router(style_tips_router)
+app.include_router(suggest_verbs_router)
+app.include_router(compare_skills_router)
+app.include_router(linkedin_router)
+app.include_router(oauth_router)
+app.include_router(resume_export_router)
+app.include_router(resume_router)
+
+
+# --- User/Profile Endpoints ---
+@app.post("/users", response_model=schemas.UserProfile)
+def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    from backend.app.auth_utils import get_password_hash
+    user_data = user.dict()
+    hashed_password = get_password_hash(user_data.pop("password"))
+    user_data["hashed_password"] = hashed_password
+    new_user = models.User(**user_data)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+# --- Job Preferences Endpoints ---
+@app.post("/profile/{user_id}/job-preferences", response_model=JobPreferences)
+def create_job_preferences(user_id: int, prefs: JobPreferencesCreate, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    existing = db.query(models.JobPreferences).filter(models.JobPreferences.user_id == user_id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Job preferences already exist for this user")
+    db_prefs = models.JobPreferences(user_id=user_id, **prefs.dict())
+    db.add(db_prefs)
+    db.commit()
+    db.refresh(db_prefs)
+    return db_prefs
+
+@app.get("/profile/{user_id}/job-preferences", response_model=JobPreferences)
+def get_job_preferences(user_id: int, db: Session = Depends(get_db)):
+    prefs = db.query(models.JobPreferences).filter(models.JobPreferences.user_id == user_id).first()
+    if not prefs:
+        raise HTTPException(status_code=404, detail="Job preferences not found")
+    return prefs
+
+@app.put("/profile/{user_id}/job-preferences", response_model=JobPreferences)
+def update_job_preferences(user_id: int, update: JobPreferencesCreate, db: Session = Depends(get_db)):
+    prefs = db.query(models.JobPreferences).filter(models.JobPreferences.user_id == user_id).first()
+    if not prefs:
+        raise HTTPException(status_code=404, detail="Job preferences not found")
+    for field, value in update.dict(exclude_unset=True).items():
+        setattr(prefs, field, value)
+    db.commit()
+    db.refresh(prefs)
+    return prefs
+
+# --- Skill Endpoints ---
+@app.post("/profile/{user_id}/skill", response_model=Skill)
+def add_skill(user_id: int, skill: SkillCreate, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db_skill = models.Skill(user_id=user_id, **skill.dict())
+    db.add(db_skill)
+    db.commit()
+    db.refresh(db_skill)
+    return db_skill
+
+# --- Education Endpoints ---
+@app.post("/profile/{user_id}/education", response_model=Education)
+def add_education(user_id: int, education: EducationCreate, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db_education = models.Education(user_id=user_id, **education.dict())
+    db.add(db_education)
+    db.commit()
+    db.refresh(db_education)
+    return db_education
+
+
+
+# --- Health Check ---
 @app.get("/")
 def read_root():
     return {"message": "API is running"}
@@ -81,43 +184,7 @@ def list_schools(db: Session = Depends(get_db)):
     return db.query(models.School).all()
 
 
-
-# --- User Registration Endpoint for Tests ---
-@app.post("/users", response_model=schemas.UserProfile)
-def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    # Hash the password before storing
-    from app.auth_utils import get_password_hash
-    user_data = user.dict()
-    hashed_password = get_password_hash(user_data.pop("password"))
-    user_data["hashed_password"] = hashed_password
-    new_user = models.User(**user_data)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
-
-# Register all routers at module level
-from app.api.resume import router as resume_router
-app.include_router(auth_router)
-app.include_router(user_router)
-app.include_router(keyword_extraction_router)
-app.include_router(tailor_resume_router)
-app.include_router(style_tips_router)
-app.include_router(suggest_verbs_router)
-app.include_router(compare_skills_router)
-app.include_router(linkedin_router)
-app.include_router(oauth_router)
-app.include_router(resume_export_router)
-app.include_router(resume_router)
-
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    return crud.create_user(db, user)
+# --- Experience Endpoints ---
 @app.post("/profile/{user_id}/experience-summary", response_model=schemas.ExperienceSummary)
 def create_experience_summary(user_id: int, summary: schemas.ExperienceSummaryCreate, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
@@ -127,12 +194,20 @@ def create_experience_summary(user_id: int, summary: schemas.ExperienceSummaryCr
     if existing:
         raise HTTPException(status_code=400, detail="Experience summary already exists for this user")
     return crud.create_experience_summary(db, user_id, summary)
+
 @app.get("/profile/{user_id}/experience-summary", response_model=schemas.ExperienceSummary)
 def get_experience_summary(user_id: int, db: Session = Depends(get_db)):
     summary = crud.get_experience_summary(db, user_id)
     if not summary:
         raise HTTPException(status_code=404, detail="Experience summary not found")
     return summary
+
+@app.put("/profile/{user_id}/experience-summary", response_model=schemas.ExperienceSummary)
+def update_experience_summary(user_id: int, summary: schemas.ExperienceSummaryUpdate, db: Session = Depends(get_db)):
+    db_summary = crud.get_experience_summary(db, user_id)
+    if not db_summary:
+        raise HTTPException(status_code=404, detail="Experience summary not found")
+    return crud.update_experience_summary(db, user_id, summary)
 
 @app.post("/profile/{user_id}/experience", response_model=schemas.Experience)
 def add_experience(user_id: int, exp: schemas.ExperienceCreate, db: Session = Depends(get_db)):
@@ -176,26 +251,18 @@ def rewrite_bullet_endpoint(payload: BulletRewriteRequest, db: Session = Depends
     for b in bullets:
         create_rewritten_bullet(db, original_bullet=payload.text, rewritten_bullet=b, user_id=None)
     return BulletRewriteResponse(bullets=bullets)
-from app.resume_export import router as resume_export_router
-app.include_router(linkedin_router)
-app.include_router(resume_export_router)
+
 # --- Job Ad Input Endpoint ---
-import requests
-from bs4 import BeautifulSoup
-import os
-from urllib.parse import urlparse
 @app.post("/jobad", response_model=schemas.JobAd)
 def create_job_ad(
     payload: schemas.JobAdCreate,
     db: Session = Depends(get_db)
 ):
-    # For MVP: Only handle 'manual' and 'indeed' sources, stub for API integration
     ALLOWED_DOMAINS = [
         "indeed.com",
         "www.indeed.com",
         "linkedin.com",
         "www.linkedin.com",
-        # add more allowed domains as needed
     ]
     job_data = {
         'source': payload.source,
@@ -207,12 +274,9 @@ def create_job_ad(
         'skills': payload.skills if payload.skills is not None else [],
         'keywords': payload.keywords if hasattr(payload, 'keywords') and payload.keywords is not None else [],
     }
-    # If URL is provided and any of the main fields are missing, try to scrape them
     if payload.url and (not payload.title or not payload.company or not payload.location or not payload.description):
         parsed_url = urlparse(payload.url)
-        # Prevent SSRF: only allow http(s) and exact/approved hostnames.
         allowed_hostnames = set(ALLOWED_DOMAINS)
-        # Allow test URLs (e.g., fakejobad.com) only as exact matches.
         if parsed_url.scheme not in ("http", "https"):
             raise HTTPException(status_code=400, detail="Invalid URL scheme. Only http and https are allowed.")
         if (
@@ -221,9 +285,6 @@ def create_job_ad(
             and not (parsed_url.hostname is not None and parsed_url.hostname.endswith(".fakejobad.com"))
         ):
             raise HTTPException(status_code=400, detail="URL domain is not allowed for scraping.")
-        # Optionally: Validate port is standard (80/443/default)
-        # Optionally: Validate IP address is not internal by resolving (requires socket and ipaddress)
-        # Only use the reconstructed URL to avoid injection via path, fragment, etc.
         safe_url = f"{parsed_url.scheme}://{parsed_url.hostname}"
         if parsed_url.port:
             safe_url += f":{parsed_url.port}"
@@ -249,10 +310,7 @@ def create_job_ad(
                     job_data['description'] = desc.get_text(separator=' ', strip=True)
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Failed to fetch or parse job ad: {e}")
-    # AI Assistance: Summarize and extract skills (stub)
     if job_data['description'] and not job_data['skills']:
-        # Improved keyword extraction: include capitalized words and common tech keywords
-        import re
         words = re.findall(r'\b\w+\b', job_data['description'])
         tech_keywords = {'Python', 'SQL', 'ML', 'AI', 'Java', 'C++', 'JavaScript', 'cloud', 'data', 'teamwork', 'collaboration', 'PyTorch'}
         skills = set()
@@ -260,7 +318,6 @@ def create_job_ad(
             if w in tech_keywords or w.isupper() or (w.istitle() and len(w) > 2):
                 skills.add(w)
         job_data['skills'] = list(skills)[:10]
-    # Save to DB
     db_job_ad = crud.create_job_ad(db, schemas.JobAdCreate(
         user_id=payload.user_id,
         source=job_data['source'],
@@ -272,13 +329,10 @@ def create_job_ad(
         skills=job_data['skills'],
         keywords=job_data['keywords'],
     ))
-    # Convert skills from comma-separated string to list for API response
     job_ad_dict = db_job_ad.__dict__.copy()
     if isinstance(job_ad_dict.get('skills'), str):
         job_ad_dict['skills'] = [s.strip() for s in job_ad_dict['skills'].split(',') if s.strip()]
-    # Ensure keywords is a list
     if isinstance(job_ad_dict.get('keywords'), str):
-        import json
         try:
             job_ad_dict['keywords'] = json.loads(job_ad_dict['keywords'])
         except Exception:
@@ -287,8 +341,8 @@ def create_job_ad(
         job_ad_dict['keywords'] = []
     return schemas.JobAd.model_validate(job_ad_dict)
 
+# --- Flask Integration (if needed) ---
 def register_flask_endpoints(app):
-    # Register Flask blueprints on the FastAPI app using WSGIMiddleware if needed
     from fastapi.middleware.wsgi import WSGIMiddleware
     from flask import Flask
     flask_app = Flask(__name__)
@@ -296,3 +350,51 @@ def register_flask_endpoints(app):
     app.mount('/flask', WSGIMiddleware(flask_app))
 
 register_flask_endpoints(app)
+
+
+# --- Interest Endpoints ---
+
+@app.post("/profile/{user_id}/interest", response_model=schemas.Interest)
+def add_interest(user_id: int, interest: schemas.InterestCreate, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db_interest = models.Interest(user_id=user_id, **interest.dict())
+    db.add(db_interest)
+    db.commit()
+    db.refresh(db_interest)
+    return db_interest
+
+# --- Get User Profile Endpoint ---
+@app.get("/profile/{user_id}", response_model=schemas.UserProfile)
+def get_user_profile(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    # Gather related info
+    interests = db.query(models.Interest).filter(models.Interest.user_id == user_id).all()
+    skills = db.query(models.Skill).filter(models.Skill.user_id == user_id).all()
+    education = db.query(models.Education).filter(models.Education.user_id == user_id).all()
+    job_preferences = db.query(models.JobPreferences).filter(models.JobPreferences.user_id == user_id).first()
+    experiences = db.query(models.Experience).filter(models.Experience.user_id == user_id).all()
+    # Serialize related objects to Pydantic schemas
+    interests_out = [schemas.Interest.from_orm(i) for i in interests]
+    skills_out = [schemas.Skill.from_orm(s) for s in skills]
+    education_out = [schemas.Education.from_orm(e) for e in education]
+    experiences_out = [schemas.Experience.from_orm(e) for e in experiences]
+    job_preferences_out = schemas.JobPreferences.from_orm(job_preferences) if job_preferences else None
+    # Compose profile
+    # Compose profile and ensure both 'education' and 'educations' keys for compatibility
+    profile = schemas.UserProfile(
+        id=user.id,
+        name=user.name,
+        email=user.email,
+        tier=user.tier,
+        interests=interests_out,
+        skills=skills_out,
+        educations=education_out,
+        education=education_out,
+        job_preferences=job_preferences_out,
+        experiences=experiences_out
+    )
+    return profile

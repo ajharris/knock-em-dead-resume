@@ -2,12 +2,12 @@ import pytest
 
 
 from fastapi.testclient import TestClient
-import app.main as main_mod
+import backend.app.main as main_mod
 
 @pytest.fixture
 def client(monkeypatch):
     # Patch the function in the endpoint's module
-    monkeypatch.setattr("app.api.keyword_extraction.extract_keywords_with_openai", lambda job_desc: ["python", "sql", "data analysis", "tableau", "aws"])
+    monkeypatch.setattr("backend.app.api.keyword_extraction.extract_keywords_with_openai", lambda job_desc: ["python", "sql", "data analysis", "tableau", "aws"])
     with TestClient(main_mod.app) as c:
         yield c
 

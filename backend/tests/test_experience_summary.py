@@ -1,11 +1,11 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.main import create_app
-from app import models, database
+from backend.app.main import create_app
+from backend.app import models, database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-import app.database as app_database
+import backend.app.database as app_database
 
 
 # Pytest fixture for isolated in-memory DB per test

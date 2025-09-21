@@ -42,7 +42,7 @@ def extract_text_from_docx(file: BinaryIO) -> str:
 
 def extract_keywords(text: str) -> set:
     # Simple keyword extraction: words > 2 chars, ignore stopwords
-    stopwords = set(['the','and','for','with','that','this','from','are','was','but','not','you','all','any','can','had','her','his','our','out','has','have','will','who','their','they','she','him','her','its','then','were','which','when','what','where','how','why','your','about','into','than','them','these','those','such','only','other','some','could','would','should','shall','may','might','must','each','every','either','neither','both','few','more','most','much','many','own','same','so','too','very'])
+    stopwords = set(['the','and','for','with','that','this','from','are','was','but','not','you','all','any','can','had','her','his','our','out','has','have','will','who','their','they','she','him','her','its','then','were','which','when','what','where','how','why','your','about','into','than','them','these','those','such','only','other','some','could','would','should','shall','may','might','must','each','every','either','neither','both','few','more','most','much','many','own','same','so','too','very','required'])
     words = re.findall(r'\b\w{3,}\b', text.lower())
     return set(w for w in words if w not in stopwords)
 

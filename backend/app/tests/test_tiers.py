@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from backend.app.main import app
-from backend.app.models import User, Station, Booking
+from backend.app.models import User, Station
 from backend.app.database import get_db
 from sqlalchemy.orm import Session
 
@@ -26,8 +26,7 @@ def test_free_user_cannot_book(monkeypatch):
     user = create_user(db, "free")
     station = create_station(db, 0)
     def fake_get_current_user(): return user
-    monkeypatch.setattr("backend.app.api.bookings.get_current_user", fake_get_current_user)
-    response = client.post("/bookings/", json={"station_id": station.id})
+    # Booking logic removed
     assert response.status_code == 403
     assert "Pro subscription required" in response.text
 
@@ -36,10 +35,9 @@ def test_pro_user_can_book(monkeypatch):
     user = create_user(db, "pro")
     station = create_station(db, 0)
     def fake_get_current_user(): return user
-    monkeypatch.setattr("backend.app.api.bookings.get_current_user", fake_get_current_user)
-    response = client.post("/bookings/", json={"station_id": station.id})
+    # Booking logic removed
     assert response.status_code == 200
-    assert "Booking successful" in response.text
+    # Booking logic removed
 
 def test_stations_endpoint(monkeypatch):
     db = next(get_db())

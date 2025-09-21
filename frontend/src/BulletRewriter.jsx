@@ -12,7 +12,8 @@ export default function BulletRewriter() {
     setError("");
     setUsed(null);
     try {
-      const res = await fetch("/api/rewrite_bullet", {
+      const API_BASE = (await import("./services/apiBase")).default;
+      const res = await fetch(`${API_BASE}/api/rewrite_bullet`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: input }),

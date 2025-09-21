@@ -20,8 +20,7 @@ class Resume(ResumeBase):
     user_id: int
     created_at: datetime
     updated_at: datetime
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 
 # --- Bullet Rewrite Schemas ---
@@ -53,8 +52,7 @@ class ExperienceSummaryUpdate(ExperienceSummaryBase):
 class ExperienceSummary(ExperienceSummaryBase):
     id: int
     user_id: int
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
@@ -67,8 +65,7 @@ class InterestCreate(InterestBase):
 
 class Interest(InterestBase):
     id: int
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 
 class CompanyBase(BaseModel):
@@ -79,8 +76,7 @@ class CompanyCreate(CompanyBase):
 
 class Company(CompanyBase):
     id: int
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 class RoleBase(BaseModel):
     name: str
@@ -90,8 +86,7 @@ class RoleCreate(RoleBase):
 
 class Role(RoleBase):
     id: int
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 class ExperienceBase(BaseModel):
     company_id: int
@@ -107,8 +102,7 @@ class Experience(ExperienceBase):
     id: int
     company: Company
     role: Role
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 class SkillBase(BaseModel):
     name: str
@@ -119,8 +113,7 @@ class SkillCreate(SkillBase):
 
 class Skill(SkillBase):
     id: int
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 
 class SchoolBase(BaseModel):
@@ -131,8 +124,7 @@ class SchoolCreate(SchoolBase):
 
 class School(SchoolBase):
     id: int
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 class ProgramBase(BaseModel):
     name: str
@@ -142,8 +134,7 @@ class ProgramCreate(ProgramBase):
 
 class Program(ProgramBase):
     id: int
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 class EducationBase(BaseModel):
     school_id: int
@@ -160,8 +151,7 @@ class Education(EducationBase):
     id: int
     school: School
     program: Program
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 class UserBase(BaseModel):
     name: str
@@ -184,8 +174,13 @@ class UserProfile(UserBase):
     github: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    class Config:
-        orm_mode = True
+    experiences: List["Experience"] = []
+    skills: List["Skill"] = []
+    educations: List["Education"] = []
+    education: List["Education"] = []  # for backward compatibility
+    interests: List["Interest"] = []
+    job_preferences: Optional["JobPreferences"] = None
+    model_config = {"from_attributes": True}
 
 class User(UserBase):
     id: int
@@ -193,8 +188,7 @@ class User(UserBase):
     skills: List[Skill] = []
     educations: List[Education] = []
     interests: List[Interest] = []
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 
 # Job Preferences Schemas
@@ -217,8 +211,7 @@ class JobPreferencesCreate(JobPreferencesBase):
 class JobPreferences(JobPreferencesBase):
     id: int
     user_id: int
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 
 class JobAdBase(BaseModel):
@@ -254,13 +247,5 @@ class StationOut(BaseModel):
     price: int | None = None
     rating: int | None = None
     availability: str | None = None
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
-class BookingOut(BaseModel):
-    id: int
-    user_id: int
-    station_id: int
-    created_at: datetime
-    class Config:
-        orm_mode = True

@@ -5,7 +5,7 @@ def test_openai_rewrite(monkeypatch):
     # Patch environment so ai_bullet_rewriter does not raise
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     # Reload module to pick up env var
-    import app.ai_bullet_rewriter as ai_bullet_rewriter
+    import backend.app.ai_bullet_rewriter as ai_bullet_rewriter
     def fake_openai(text):
         return [
             "Increased sales by 30% through targeted marketing initiatives.",
