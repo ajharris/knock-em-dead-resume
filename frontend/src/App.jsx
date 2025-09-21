@@ -32,6 +32,7 @@ function App() {
 
   return (
     <div>
+      <div style={{background: '#ff0', color: '#000', padding: 8, marginBottom: 8}}>DEBUG: App component rendered</div>
       <TierBanner tier={tier} />
       <div className="flex gap-2 mb-4">
         <button onClick={() => setShowDashboard((v) => !v)} className="bg-gray-200 px-3 py-1 rounded">
