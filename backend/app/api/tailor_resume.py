@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models import User, JobAd, TailoredResume
+from backend.app.database import get_db
+from backend.app.models import User, JobAd, TailoredResume
 from datetime import datetime
 import openai
 

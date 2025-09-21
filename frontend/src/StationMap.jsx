@@ -6,11 +6,13 @@ export default function StationMap() {
   const tier = window.localStorage.getItem('tier') || 'free';
 
   useEffect(() => {
-    fetch("/api/stations", {
-      headers: { Authorization: `Bearer ${window.localStorage.getItem('token')}` }
-    })
-      .then((r) => r.json())
-      .then(setStations);
+    import("./services/apiBase").then(({ default: API_BASE }) => {
+      fetch(`${API_BASE}/api/stations`, {
+        headers: { Authorization: `Bearer ${window.localStorage.getItem('token')}` }
+      })
+        .then((r) => r.json())
+        .then(setStations);
+    });
   }, []);
 
   const handleBook = (station) => {

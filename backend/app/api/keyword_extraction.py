@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from ..database import SessionLocal
 from ..ai_bullet_rewriter import extract_keywords_with_openai
-from app.utils import normalize_keywords
+from backend.app.utils import normalize_keywords
 from .. import schemas
 
 router = APIRouter()

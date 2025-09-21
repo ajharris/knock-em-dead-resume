@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
 
-from app.base import Base
+from backend.app.base import Base
 
 
 # Get the database URL from the environment variable

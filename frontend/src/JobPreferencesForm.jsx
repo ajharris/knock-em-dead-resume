@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import API_BASE from "./services/apiBase";
 
 export default function JobPreferencesForm({ userId, onComplete }) {
   const [form, setForm] = useState({
@@ -24,7 +25,7 @@ export default function JobPreferencesForm({ userId, onComplete }) {
     setLoading(true);
     setError("");
     try {
-      await axios.post(`/profile/${userId}/job-preferences`, form);
+  await axios.post(`${API_BASE}/profile/${userId}/job-preferences`, form);
       onComplete();
     } catch (err) {
       setError(err.response?.data?.detail || "Error saving job preferences");

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import API_BASE from './services/apiBase';
 
 const JobAdScanner = () => {
   const [jobAdFile, setJobAdFile] = useState(null);
@@ -25,7 +26,7 @@ const JobAdScanner = () => {
     formData.append('job_ad', jobAdFile);
     formData.append('resume', resumeFile);
     try {
-      const res = await axios.post('/flask/api/scan_resume', formData, {
+  const res = await axios.post(`${API_BASE}/flask/api/scan_resume`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setResult(res.data);

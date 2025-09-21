@@ -2,8 +2,8 @@
 
 import pytest
 from fastapi.testclient import TestClient
-from app.main import app
-from app import models, database
+from backend.app.main import app
+from backend.app import models, database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -21,7 +21,7 @@ def in_memory_db():
     models.Base.metadata.drop_all(bind=engine)
     models.Base.metadata.create_all(bind=engine)
     # Patch app.database to use test engine/session
-    import app.database as app_database
+    import backend.app.database as app_database
     app_database.engine = engine
     app_database.SessionLocal = TestingSessionLocal
     def override_get_db():

@@ -35,6 +35,7 @@ def linkedin_login():
 @router.get("/auth/linkedin/callback")
 def linkedin_callback(request: Request, code: str = None, state: str = None, db: Session = Depends(get_db)):
     import json
+    from fastapi.responses import JSONResponse
     def popup_response(success, user=None, error=None):
         if success:
             payload = {"type": "oauth-success", "user": user}
@@ -50,7 +51,7 @@ def linkedin_callback(request: Request, code: str = None, state: str = None, db:
         )
 
     if not code:
-        return popup_response(False, error="No code provided")
+        return JSONResponse(status_code=400, content={"detail": "No code provided"})
     # Exchange code for access token
     token_url = "https://www.linkedin.com/oauth/v2/accessToken"
     data = {
@@ -62,7 +63,7 @@ def linkedin_callback(request: Request, code: str = None, state: str = None, db:
     }
     resp = requests.post(token_url, data=data, headers={"Content-Type": "application/x-www-form-urlencoded"})
     if resp.status_code != 200:
-        return popup_response(False, error="Failed to get access token")
+        return JSONResponse(status_code=400, content={"detail": "Failed to get access token"})
     access_token = resp.json().get("access_token")
     # Fetch user info
     profile_resp = requests.get(
@@ -74,7 +75,7 @@ def linkedin_callback(request: Request, code: str = None, state: str = None, db:
         headers={"Authorization": f"Bearer {access_token}"}
     )
     if profile_resp.status_code != 200 or email_resp.status_code != 200:
-        return popup_response(False, error="Failed to fetch user info from LinkedIn")
+        return JSONResponse(status_code=400, content={"detail": "Failed to fetch user info from LinkedIn"})
     profile = profile_resp.json()
     email = email_resp.json()["elements"][0]["handle~"]["emailAddress"]
     # Upsert user

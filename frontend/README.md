@@ -1,12 +1,75 @@
-# React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Knock 'Em Dead Resume Builder Frontend
 
-Currently, two official plugins are available:
+This is the React frontend for the Knock 'Em Dead Resume Builder, built with Vite.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Local Development
 
-## Expanding the ESLint configuration
+1. Install dependencies:
+	```bash
+	npm install
+	```
+2. Create a `.env` file (already present) for local API URL:
+	```env
+	REACT_APP_API_URL=http://localhost:8000
+	```
+3. Start the dev server:
+	```bash
+	npm run dev
+	```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Production Build
+
+To build for production:
+
+```bash
+npm run build
+```
+
+The output will be in the `dist/` folder.
+
+## Environment Variables
+
+- `.env` (development):
+  - `REACT_APP_API_URL=http://localhost:8000`
+- `.env.production` (production):
+  - `REACT_APP_API_URL=https://your-backend.example.com`
+
+## Deploying to GitHub Pages
+
+This project is configured to deploy the production build to GitHub Pages using the `gh-pages` branch.
+
+### Manual Deploy
+
+1. Build the app:
+	```bash
+	npm run build
+	```
+2. Deploy:
+	```bash
+	npm run deploy
+	```
+
+### Automatic Deploy (CI/CD)
+
+On every push to `main`, GitHub Actions will:
+- Install dependencies
+- Run tests
+- Build the frontend with `.env.production` (API URL from repo secrets)
+- Deploy to GitHub Pages (`gh-pages` branch)
+
+See `.github/workflows/deploy.yml` for details.
+
+## API Base URL Switching
+
+The frontend uses `process.env.REACT_APP_API_URL` to determine the backend API base URL. This is set via environment files or CI secrets.
+
+## Testing
+
+Run unit tests with:
+
+```bash
+npm test
+```
+
+Tests include checks for correct API base URL switching between dev and prod.
