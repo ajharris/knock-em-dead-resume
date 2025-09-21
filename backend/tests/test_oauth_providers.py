@@ -40,7 +40,9 @@ def test_facebook_login_redirect(client):
     r = client.get("/auth/facebook", follow_redirects=False)
     assert r.status_code in (302, 307)
     parsed = urlparse(r.headers["location"])
-    assert parsed.hostname is not None and parsed.hostname.endswith("facebook.com")
+    assert parsed.hostname is not None and (
+        parsed.hostname == "facebook.com" or parsed.hostname.endswith(".facebook.com")
+    )
 
 def test_google_callback_no_code(client):
     r = client.get("/auth/google/callback")
