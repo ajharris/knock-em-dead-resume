@@ -42,6 +42,7 @@ if [ -f .env ]; then
   source .env
   set +o allexport
 fi
+echo "DEBUG: DATABASE_URL is $DATABASE_URL"
 if [[ -z "$DATABASE_URL" || "$DATABASE_URL" == sqlite* ]]; then
   echo "[run_all_tests.sh] Error: DATABASE_URL is not set or is using SQLite. Please set DATABASE_URL in your .env file to your Heroku Postgres URL."
   exit 2
