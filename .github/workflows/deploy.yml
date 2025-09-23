@@ -8,6 +8,8 @@ on:
       - main
 
 jobs:
+      - name: Print all environment variables
+        run: printenv
   build-test-deploy:
     runs-on: ubuntu-latest
     env:
