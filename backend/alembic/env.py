@@ -85,6 +85,8 @@ def run_migrations_online() -> None:
         db_url = normalize_database_url(db_url)
         if db_url:
             section["sqlalchemy.url"] = db_url
+    if not section.get("sqlalchemy.url"):
+        raise RuntimeError("No database URL found. Please set 'sqlalchemy.url' in alembic.ini or 'DATABASE_URL' in your environment.")
     connectable = engine_from_config(
         section,
         prefix="sqlalchemy.",
