@@ -1,29 +1,43 @@
 import pytest
+
 from fastapi.testclient import TestClient
 from backend.app.main import app
-from backend.app import models, schemas
+from backend.app import models, database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.app.database import Base
+from sqlalchemy.pool import StaticPool
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Use robust in_memory_db and client fixtures for proper DB isolation and persistence
+@pytest.fixture
+def in_memory_db():
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool
+    )
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    models.Base.metadata.drop_all(bind=engine)
+    models.Base.metadata.create_all(bind=engine)
+    import backend.app.database as app_database
+    app_database.engine = engine
+    app_database.SessionLocal = TestingSessionLocal
+    def override_get_db():
+        db = TestingSessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+    app.dependency_overrides[database.get_db] = override_get_db
+    yield app
+    models.Base.metadata.drop_all(bind=engine)
 
-@pytest.fixture(scope="module")
-def test_db():
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    yield db
-    db.close()
-    Base.metadata.drop_all(bind=engine)
-
-@pytest.fixture(scope="module")
-def client():
+@pytest.fixture
+def client(in_memory_db):
+    app = in_memory_db
     with TestClient(app) as c:
         yield c
 
-def test_create_job_ad(client, test_db):
+def test_create_job_ad(client):
     # Create a user first
     user_resp = client.post("/users", json={"name": "Test User", "email": "testuser@example.com", "password": "dummy123"})
     assert user_resp.status_code == 200
@@ -48,7 +62,7 @@ def test_create_job_ad(client, test_db):
     assert "Python" in data["skills"]
 
 
-def test_create_job_ad_from_url(client, test_db, monkeypatch):
+def test_create_job_ad_from_url(client, monkeypatch):
     """Test job ad creation by scraping a job ad URL (mocked HTML)."""
     user_resp = client.post("/users", json={"name": "URL User", "email": "urluser@example.com", "password": "dummy123"})
     user_id = user_resp.json()["id"]
@@ -76,7 +90,7 @@ def test_create_job_ad_from_url(client, test_db, monkeypatch):
     assert "SQL" in data["skills"]
 
 
-def test_create_job_ad_from_api(client, test_db):
+def test_create_job_ad_from_api(client):
     """Test job ad creation from API source (mocked for MVP)."""
     user_resp = client.post("/users", json={"name": "API User", "email": "apiuser@example.com", "password": "dummy123"})
     user_id = user_resp.json()["id"]
@@ -100,7 +114,7 @@ def test_create_job_ad_from_api(client, test_db):
     assert "FastAPI" in data["skills"]
 
 
-def test_ai_keyword_extraction(client, test_db):
+def test_ai_keyword_extraction(client):
     """Test that keywords are extracted from description (AI stub)."""
     user_resp = client.post("/users", json={"name": "AI User", "email": "aiuser@example.com", "password": "dummy123"})
     user_id = user_resp.json()["id"]

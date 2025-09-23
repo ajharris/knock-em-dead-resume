@@ -19,8 +19,10 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from app.base import Base
+
+# Import all model modules so Alembic can detect all tables
 from app.base import Base
+from app import models, rewritten_bullet_model
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -42,6 +44,8 @@ def run_migrations_offline() -> None:
 
     """
     url = config.get_main_option("sqlalchemy.url")
+    if not url:
+        url = os.environ.get("DATABASE_URL")
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -60,8 +64,14 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+
+    section = config.get_section(config.config_ini_section, {})
+    if not section.get("sqlalchemy.url"):
+        db_url = os.environ.get("DATABASE_URL")
+        if db_url:
+            section["sqlalchemy.url"] = db_url
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
