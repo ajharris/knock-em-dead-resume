@@ -27,11 +27,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Set up .env
-        run: echo "DATABASE_URL=$DATABASE_URL" > .env
+      - name: Show working directory
+        run: pwd
 
-      - name: Debug env
-        run: cat .env && echo "DATABASE_URL is $DATABASE_URL"
+      - name: List files in workspace
+        run: ls -l
+
+      - name: Set up .env
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+          cat .env
+
+      - name: Source .env and debug
+        run: |
+          set -o allexport
+          source .env
+          set +o allexport
+          echo "DEBUG: DATABASE_URL is $DATABASE_URL"
 
       - name: Run backend tests
         run: |
