@@ -1,4 +1,6 @@
 name: Deploy Backend to Heroku
+permissions:
+  contents: read
 
 on:
   push:
