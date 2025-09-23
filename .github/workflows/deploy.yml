@@ -11,7 +11,6 @@ jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - name: Checkout code
@@ -27,9 +26,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Set up .env
+        run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+
+      - name: Debug env
+        run: cat .env && echo "DATABASE_URL is $DATABASE_URL"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       - name: Run backend tests
-        run: |
-          bash run_all_tests.sh
+        run: bash run_all_tests.sh
 
       - name: Deploy to Heroku
         uses: akhileshns/heroku-deploy@v3.13.15
