@@ -34,7 +34,11 @@ jobs:
         run: cat .env && echo "DATABASE_URL is $DATABASE_URL"
 
       - name: Run backend tests
-        run: bash run_all_tests.sh
+        run: |
+          set -o allexport
+          source .env
+          set +o allexport
+          bash run_all_tests.sh
 
       - name: Deploy to Heroku
         uses: akhileshns/heroku-deploy@v3.13.15
