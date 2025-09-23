@@ -83,9 +83,11 @@ def serve_react_root():
 # Fallback for all other frontend routes (for React Router)
 @app.get("/{full_path:path}")
 def serve_react_app(full_path: str):
-    static_path = os.path.join(frontend_build_dir, full_path)
-    if os.path.exists(static_path) and not os.path.isdir(static_path):
-        return FileResponse(static_path)
+    # Normalize path to prevent path traversal
+    normalized_path = os.path.normpath(os.path.join(frontend_build_dir, full_path))
+    # Ensure the normalized path is within the frontend build directory
+    if normalized_path.startswith(frontend_build_dir) and os.path.exists(normalized_path) and not os.path.isdir(normalized_path):
+        return FileResponse(normalized_path)
     index_path = os.path.join(frontend_build_dir, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
