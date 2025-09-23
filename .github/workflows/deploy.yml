@@ -39,10 +39,9 @@ jobs:
           cat .env
 
       - name: Run backend tests
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          set -o allexport
-          source .env
-          set +o allexport
           echo "DEBUG: DATABASE_URL is $DATABASE_URL"
           bash run_all_tests.sh
 
