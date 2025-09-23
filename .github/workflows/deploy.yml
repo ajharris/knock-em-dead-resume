@@ -38,18 +38,12 @@ jobs:
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
           cat .env
 
-      - name: Source .env and debug
-        run: |
-          set -o allexport
-          source .env
-          set +o allexport
-          echo "DEBUG: DATABASE_URL is $DATABASE_URL"
-
       - name: Run backend tests
         run: |
           set -o allexport
           source .env
           set +o allexport
+          echo "DEBUG: DATABASE_URL is $DATABASE_URL"
           bash run_all_tests.sh
 
       - name: Deploy to Heroku
