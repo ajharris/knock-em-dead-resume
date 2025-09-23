@@ -1,5 +1,13 @@
+
 import sys
 import os
+
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from logging.config import fileConfig
 
@@ -7,6 +15,11 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+def normalize_database_url(url):
+    if url and url.startswith("postgres://"):
+        return "postgresql://" + url[len("postgres://"):]
+    return url
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -46,6 +59,7 @@ def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
     if not url:
         url = os.environ.get("DATABASE_URL")
+    url = normalize_database_url(url)
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -68,6 +82,7 @@ def run_migrations_online() -> None:
     section = config.get_section(config.config_ini_section, {})
     if not section.get("sqlalchemy.url"):
         db_url = os.environ.get("DATABASE_URL")
+        db_url = normalize_database_url(db_url)
         if db_url:
             section["sqlalchemy.url"] = db_url
     connectable = engine_from_config(
