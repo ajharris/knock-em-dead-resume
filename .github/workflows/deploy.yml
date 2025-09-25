@@ -30,6 +30,12 @@ jobs:
       - name: Show working directory
         run: pwd
 
+      - name: Print environment variables (debug)
+        run: printenv | sort
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        # This will print all environment variables except masked secrets
+
       - name: List files in workspace
         run: ls -l
 
