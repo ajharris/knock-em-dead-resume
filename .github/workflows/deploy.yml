@@ -11,7 +11,7 @@ jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL2: ${{ secrets.DATABASE_URL2 }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - name: Checkout code
@@ -39,26 +39,26 @@ jobs:
       - name: List files in workspace
         run: ls -l
 
-      - name: Debug secrets availability
+      - name: Debug secrets availability (DATABASE_URL2)
         run: |
-          echo "Checking DATABASE_URL secret..."
-          if [ -z "${{ secrets.DATABASE_URL }}" ]; then
-            echo "ERROR: DATABASE_URL secret is empty or not set"
+          echo "Checking DATABASE_URL2 secret..."
+          if [ -z "${{ secrets.DATABASE_URL2 }}" ]; then
+            echo "ERROR: DATABASE_URL2 secret is empty or not set"
             exit 1
           else
-            echo "DATABASE_URL secret is available (length: ${#DATABASE_URL})"
+            echo "DATABASE_URL2 secret is available (length: ${#DATABASE_URL2})"
           fi
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL2: ${{ secrets.DATABASE_URL2 }}
 
-      - name: Set up .env
+      - name: Set up .env (DATABASE_URL2)
         run: |
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
-          echo "Created .env file with DATABASE_URL"
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL2 }}" > .env
+          echo "Created .env file with DATABASE_URL2"
 
-      - name: Run backend tests
+      - name: Run backend tests (DATABASE_URL2)
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL2 }}
         run: |
           echo "DEBUG: DATABASE_URL is $DATABASE_URL"
           bash run_all_tests.sh
