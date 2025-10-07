@@ -42,10 +42,17 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Login to Heroku
-        uses: akhileshns/heroku-deploy@v3.12.12
+      # 👇 This step ensures the 'heroku' CLI is actually installed before using the deploy action
+      - name: Install Heroku CLI
+        run: |
+          curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Deploy to Heroku
+        uses: akhileshns/heroku-deploy@v3.12.14
         with:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: "your-heroku-app-name"
-          heroku_email: "your-email@example.com"
+          heroku_app_name: "knock-em-dead-resume"  # ← replace with your actual Heroku app name
+          heroku_email: "ajharris@example.com"     # ← replace with your Heroku account email
           usedocker: false
+        env:
+          HD_DEBUG: true
