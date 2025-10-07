@@ -52,13 +52,39 @@ jobs:
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install.sh | sh
 
-      - name: Login to Heroku
+      - name: Verify Heroku Authentication
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-        run: echo "$HEROKU_API_KEY" | heroku auth:token
+        run: |
+          if [ -z "$HEROKU_API_KEY" ]; then
+            echo "❌ Missing HEROKU_API_KEY secret!"
+            exit 1
+          fi
+          export HEROKU_API_KEY="$HEROKU_API_KEY"
+          echo "✅ Using provided Heroku API key"
+          heroku whoami || echo "Logged in with API key."
+
+      - name: Verify Heroku App Exists
+        env:
+          HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
+        run: |
+          if [ -z "$HEROKU_APP_NAME" ]; then
+            echo "❌ Missing HEROKU_APP_NAME secret!"
+            exit 1
+          fi
+          echo "Checking if Heroku app '$HEROKU_APP_NAME' exists..."
+          if ! heroku apps:info -a "$HEROKU_APP_NAME" > /dev/null 2>&1; then
+            echo "❌ Heroku app '$HEROKU_APP_NAME' not found!"
+            exit 1
+          fi
+          echo "✅ Heroku app '$HEROKU_APP_NAME' verified."
 
       - name: Add Heroku git remote
-        run: heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
+        env:
+          HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
+        run: |
+          git remote remove heroku 2>/dev/null || true
+          heroku git:remote -a "$HEROKU_APP_NAME"
 
       - name: Deploy to Heroku
         run: git push heroku HEAD:main --force
