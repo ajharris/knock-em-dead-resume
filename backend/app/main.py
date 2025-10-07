@@ -45,6 +45,13 @@ from backend.app.api.resume import router as resume_router
 
 app = FastAPI()
 
+# Serve React static files (assume built frontend in ../frontend/build)
+frontend_build_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../frontend/build'))
+if os.path.isdir(frontend_build_dir):
+    app.mount("/static", StaticFiles(directory=os.path.join(frontend_build_dir, "static")), name="static")
+
+
+
 
 
 # --- Register Routers ---
@@ -102,28 +109,50 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    print(f"[DEBUG] Created User: id={new_user.id}, email={new_user.email}, name={new_user.name}")
+    print(f"[DEBUG] All Users in DB: {db.query(models.User).all()}")
+    print(f"[DEBUG] Session info (register_user): {db}")
     return new_user
 
 # --- Job Preferences Endpoints ---
 @app.post("/profile/{user_id}/job-preferences", response_model=JobPreferences)
 def create_job_preferences(user_id: int, prefs: JobPreferencesCreate, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
+    print(f"[DEBUG] [POST job-preferences] Queried User for user_id={user_id}: {user}")
     if not user:
+        print(f"[DEBUG] [POST job-preferences] No User found for user_id={user_id}")
         raise HTTPException(status_code=404, detail="User not found")
     existing = db.query(models.JobPreferences).filter(models.JobPreferences.user_id == user_id).first()
+    print(f"[DEBUG] [POST job-preferences] Existing JobPreferences for user_id={user_id}: {existing}")
     if existing:
         raise HTTPException(status_code=400, detail="Job preferences already exist for this user")
     db_prefs = models.JobPreferences(user_id=user_id, **prefs.dict())
     db.add(db_prefs)
     db.commit()
     db.refresh(db_prefs)
+    print(f"[DEBUG] Created JobPreferences: {db_prefs}")
+    print(f"[DEBUG] All JobPreferences in DB: {db.query(models.JobPreferences).all()}")
+    print(f"[DEBUG] Session info (create_job_preferences): {db}")
     return db_prefs
 
 @app.get("/profile/{user_id}/job-preferences", response_model=JobPreferences)
 def get_job_preferences(user_id: int, db: Session = Depends(get_db)):
+    all_prefs = db.query(models.JobPreferences).all()
+    all_users = db.query(models.User).all()
+    print(f"[DEBUG] [GET job-preferences] All Users in DB: {all_users}")
+    print(f"[DEBUG] [GET job-preferences] All JobPreferences in DB before GET: {all_prefs}")
+    print(f"[DEBUG] [GET job-preferences] Session object id: {id(db)}")
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    print(f"[DEBUG] [GET job-preferences] Queried User for user_id={user_id}: {user}")
     prefs = db.query(models.JobPreferences).filter(models.JobPreferences.user_id == user_id).first()
+    print(f"[DEBUG] [GET job-preferences] GET JobPreferences for user_id={user_id}: {prefs}")
+    if prefs:
+        print(f"[DEBUG] [GET job-preferences] JobPreferences fields: id={prefs.id}, user_id={prefs.user_id}, relocate={prefs.relocate}")
+    else:
+        print(f"[DEBUG] [GET job-preferences] No JobPreferences found for user_id={user_id}")
+    print(f"[DEBUG] Session info (get_job_preferences): {db}")
     if not prefs:
-        raise HTTPException(status_code=404, detail="Job preferences not found")
+        raise HTTPException(status_code=404, detail="Not found")
     return prefs
 
 @app.put("/profile/{user_id}/job-preferences", response_model=JobPreferences)
@@ -183,25 +212,20 @@ def list_programs(db: Session = Depends(get_db)):
 # --- Regenerate Experience Summary Endpoint ---
 @app.post("/profile/{user_id}/experience-summary/regenerate", response_model=schemas.ExperienceSummary)
 def regenerate_experience_summary(user_id: int, db: Session = Depends(get_db)):
-    summary = crud.get_experience_summary(db, user_id)
-    if not summary:
+    summary_obj = crud.get_experience_summary(db, user_id)
+    if not summary_obj:
         raise HTTPException(status_code=404, detail="Experience summary not found")
     # For test, just prepend a string to simulate regeneration
-    summary.summary = f"[Regenerated summary] {summary.summary}"
+    summary_obj.summary = f"[Regenerated summary] {summary_obj.summary}"  # type: ignore
     db.commit()
-    db.refresh(summary)
-    return summary
+    db.refresh(summary_obj)
+    return summary_obj
 
 def create_app():
     return app
 
 # --- Route Definitions ---
 @app.put("/profile/{user_id}/experience-summary", response_model=schemas.ExperienceSummary)
-def update_experience_summary(user_id: int, summary: schemas.ExperienceSummaryUpdate, db: Session = Depends(get_db)):
-    db_summary = crud.get_experience_summary(db, user_id)
-    if not db_summary:
-        raise HTTPException(status_code=404, detail="Experience summary not found")
-    return crud.update_experience_summary(db, user_id, summary)
 
 @app.post("/schools", response_model=schemas.School)
 def create_school(school: schemas.SchoolCreate, db: Session = Depends(get_db)):
@@ -224,11 +248,22 @@ def create_experience_summary(user_id: int, summary: schemas.ExperienceSummaryCr
     existing = crud.get_experience_summary(db, user_id)
     if existing:
         raise HTTPException(status_code=400, detail="Experience summary already exists for this user")
-    return crud.create_experience_summary(db, user_id, summary)
+    db_summary = crud.create_experience_summary(db, user_id, summary)
+    print(f"[DEBUG] Created ExperienceSummary: {db_summary}")
+    print(f"[DEBUG] All ExperienceSummaries in DB: {db.query(models.ExperienceSummary).all()}")
+    return db_summary
 
 @app.get("/profile/{user_id}/experience-summary", response_model=schemas.ExperienceSummary)
 def get_experience_summary(user_id: int, db: Session = Depends(get_db)):
+    all_summaries = db.query(models.ExperienceSummary).all()
+    print(f"[DEBUG] All ExperienceSummaries in DB before GET: {all_summaries}")
     summary = crud.get_experience_summary(db, user_id)
+    print(f"[DEBUG] GET ExperienceSummary for user_id={user_id}: {summary}")
+    if summary:
+        print(f"[DEBUG] ExperienceSummary fields: id={summary.id}, user_id={summary.user_id}, summary={summary.summary}")
+    else:
+        print(f"[DEBUG] No ExperienceSummary found for user_id={user_id}")
+    print(f"[DEBUG] Session info: {db}")
     if not summary:
         raise HTTPException(status_code=404, detail="Experience summary not found")
     return summary
@@ -326,7 +361,8 @@ def create_job_ad(
             resp = requests.get(safe_url, timeout=10)
             soup = BeautifulSoup(resp.text, 'html.parser')
             if not job_data['title']:
-                job_data['title'] = soup.find(['h1', 'h2']).get_text(strip=True) if soup.find(['h1', 'h2']) else None
+                h_tag = soup.find(['h1', 'h2'])
+                job_data['title'] = h_tag.get_text(strip=True) if h_tag else None
             if not job_data['company']:
                 company = soup.find('div', class_='company') or soup.find('span', class_='company')
                 if company:
@@ -373,14 +409,15 @@ def create_job_ad(
     return schemas.JobAd.model_validate(job_ad_dict)
 
 # --- Flask Integration (if needed) ---
-def register_flask_endpoints(app):
-    from fastapi.middleware.wsgi import WSGIMiddleware
-    from flask import Flask
-    flask_app = Flask(__name__)
-    flask_app.register_blueprint(scan_resume_bp)
-    app.mount('/flask', WSGIMiddleware(flask_app))
 
-register_flask_endpoints(app)
+# def register_flask_endpoints(app):
+#     from fastapi.middleware.wsgi import WSGIMiddleware
+#     from flask import Flask
+#     flask_app = Flask(__name__)
+#     flask_app.register_blueprint(scan_resume_bp)
+#     app.mount('/flask', WSGIMiddleware(flask_app))
+#
+# register_flask_endpoints(app)
 
 
 # --- Interest Endpoints ---
@@ -400,7 +437,9 @@ def add_interest(user_id: int, interest: schemas.InterestCreate, db: Session = D
 @app.get("/profile/{user_id}", response_model=schemas.UserProfile)
 def get_user_profile(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
+    print(f"[DEBUG] GET User for user_id={user_id}: {user}")
     if not user:
+        print(f"[DEBUG] No User found for user_id={user_id}")
         raise HTTPException(status_code=404, detail="User not found")
     # Gather related info
     interests = db.query(models.Interest).filter(models.Interest.user_id == user_id).all()
@@ -408,13 +447,15 @@ def get_user_profile(user_id: int, db: Session = Depends(get_db)):
     education = db.query(models.Education).filter(models.Education.user_id == user_id).all()
     job_preferences = db.query(models.JobPreferences).filter(models.JobPreferences.user_id == user_id).first()
     experiences = db.query(models.Experience).filter(models.Experience.user_id == user_id).all()
+    experience_summary = db.query(models.ExperienceSummary).filter(models.ExperienceSummary.user_id == user_id).first()
+    print(f"[DEBUG] Related: interests={interests}, skills={skills}, education={education}, job_preferences={job_preferences}, experiences={experiences}, experience_summary={experience_summary}")
     # Serialize related objects to Pydantic schemas
     interests_out = [schemas.Interest.from_orm(i) for i in interests]
     skills_out = [schemas.Skill.from_orm(s) for s in skills]
     education_out = [schemas.Education.from_orm(e) for e in education]
     experiences_out = [schemas.Experience.from_orm(e) for e in experiences]
     job_preferences_out = schemas.JobPreferences.from_orm(job_preferences) if job_preferences else None
-    # Compose profile
+    experience_summary_out = schemas.ExperienceSummary.from_orm(experience_summary) if experience_summary else None
     # Compose profile and ensure both 'education' and 'educations' keys for compatibility
     profile = schemas.UserProfile(
         id=user.id,
@@ -426,6 +467,9 @@ def get_user_profile(user_id: int, db: Session = Depends(get_db)):
         educations=education_out,
         education=education_out,
         job_preferences=job_preferences_out,
-        experiences=experiences_out
+        experiences=experiences_out,
+        experience_summary=experience_summary_out
     )
+    print(f"[DEBUG] Returning UserProfile: {profile}")
+    print(f"[DEBUG] Session info: {db}")
     return profile
