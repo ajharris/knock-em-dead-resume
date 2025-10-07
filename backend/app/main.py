@@ -10,6 +10,8 @@ from typing import List
 # --- Third-Party Imports ---
 import requests
 from fastapi import FastAPI, Depends, HTTPException, Body, status
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from bs4 import BeautifulSoup
@@ -40,7 +42,9 @@ from backend.api.scan_resume import scan_resume_bp
 from backend.app.api.resume import router as resume_router
 
 
+
 app = FastAPI()
+
 
 
 # --- Register Routers ---
@@ -55,6 +59,33 @@ app.include_router(linkedin_router)
 app.include_router(oauth_router)
 app.include_router(resume_export_router)
 app.include_router(resume_router)
+
+
+# --- Serve React Frontend Assets Files ---
+import pathlib
+frontend_build_dir = pathlib.Path(__file__).parent / "build"
+if frontend_build_dir.exists():
+    app.mount("/assets", StaticFiles(directory=frontend_build_dir / "assets"), name="assets")
+
+    @app.get("/", include_in_schema=False)
+    async def serve_react_index():
+        return FileResponse(frontend_build_dir / "index.html")
+
+    # 404 handler for client-side routing
+    from fastapi import Request
+    from fastapi.responses import JSONResponse
+
+    @app.exception_handler(404)
+    async def custom_404_handler(request: Request, exc):
+        # Only serve index.html for GET requests not matching API/backend prefixes
+        api_prefixes = [
+            "api", "profile", "users", "schools", "programs", "companies", "roles", "experience", "resumes", "auth", "oauth", "style-tips", "scan-resume", "compare-skills", "suggest-verbs", "resume-export", "bookings", "keyword-extraction", "tailor-resume"
+        ]
+        path = request.url.path.lstrip("/")
+        if request.method == "GET" and not any(path.startswith(prefix) for prefix in api_prefixes):
+            return FileResponse(frontend_build_dir / "index.html")
+        # Otherwise, return default 404 JSON
+        return JSONResponse(status_code=404, content={"detail": "Not Found"})
 
 
 # --- User/Profile Endpoints ---
