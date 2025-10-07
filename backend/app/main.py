@@ -11,7 +11,7 @@ from typing import List
 import requests
 from fastapi import FastAPI, Depends, HTTPException, Body, status
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from bs4 import BeautifulSoup
@@ -53,6 +53,7 @@ if os.path.isdir(frontend_build_dir):
 
 
 
+
 # --- Register Routers ---
 app.include_router(auth_router)
 app.include_router(user_router)
@@ -67,31 +68,31 @@ app.include_router(resume_export_router)
 app.include_router(resume_router)
 
 
-# --- Health Check Endpoint ---
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
+# --- Serve React Frontend Assets Files ---
+import pathlib
+frontend_build_dir = pathlib.Path(__file__).parent / "build"
+if frontend_build_dir.exists():
+    app.mount("/assets", StaticFiles(directory=frontend_build_dir / "assets"), name="assets")
 
-# --- Serve React index.html at root and fallback ---
-@app.get("/")
-def serve_react_root():
-    index_path = os.path.join(frontend_build_dir, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    return {"message": "API is running"}
+    @app.get("/", include_in_schema=False)
+    async def serve_react_index():
+        return FileResponse(frontend_build_dir / "index.html")
 
-# Fallback for all other frontend routes (for React Router)
-@app.get("/{full_path:path}")
-def serve_react_app(full_path: str):
-    # Normalize path to prevent path traversal
-    normalized_path = os.path.normpath(os.path.join(frontend_build_dir, full_path))
-    # Ensure the normalized path is within the frontend build directory
-    if normalized_path.startswith(frontend_build_dir) and os.path.exists(normalized_path) and not os.path.isdir(normalized_path):
-        return FileResponse(normalized_path)
-    index_path = os.path.join(frontend_build_dir, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    return JSONResponse({"detail": "Not found"}, status_code=404)
+    # 404 handler for client-side routing
+    from fastapi import Request
+    from fastapi.responses import JSONResponse
+
+    @app.exception_handler(404)
+    async def custom_404_handler(request: Request, exc):
+        # Only serve index.html for GET requests not matching API/backend prefixes
+        api_prefixes = [
+            "api", "profile", "users", "schools", "programs", "companies", "roles", "experience", "resumes", "auth", "oauth", "style-tips", "scan-resume", "compare-skills", "suggest-verbs", "resume-export", "bookings", "keyword-extraction", "tailor-resume"
+        ]
+        path = request.url.path.lstrip("/")
+        if request.method == "GET" and not any(path.startswith(prefix) for prefix in api_prefixes):
+            return FileResponse(frontend_build_dir / "index.html")
+        # Otherwise, return default 404 JSON
+        return JSONResponse(status_code=404, content={"detail": "Not Found"})
 
 
 # --- User/Profile Endpoints ---
