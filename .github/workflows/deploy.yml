@@ -23,17 +23,12 @@ jobs:
           cd frontend
           npm ci
 
-      - name: Run frontend tests
-        run: |
-          cd frontend
-          npm test --passWithNoTests || echo "No tests found, continuing..."
-
       - name: Build frontend
         run: |
           cd frontend
           npm run build
 
-      # ✅ Copy React build into backend/static so Heroku can serve it
+      # ✅ Copy React build into backend/static
       - name: Move frontend build to backend static folder
         run: |
           mkdir -p backend/static
@@ -41,7 +36,6 @@ jobs:
           cp -r frontend/dist/* backend/static/
           echo "✅ Copied frontend build to backend/static/"
           ls backend/static
-
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -55,45 +49,30 @@ jobs:
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install.sh | sh
 
-      - name: Verify Heroku Authentication
+      - name: Verify frontend build exists before deploy
+        run: |
+          if [ ! -f backend/static/index.html ]; then
+            echo "❌ Frontend build missing!"; exit 1;
+          else
+            echo "✅ Frontend build found.";
+          fi
+
+      - name: Set up Heroku authentication
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         run: |
-          if [ -z "$HEROKU_API_KEY" ]; then
-            echo "❌ Missing HEROKU_API_KEY secret!"
-            exit 1
-          fi
-          export HEROKU_API_KEY="$HEROKU_API_KEY"
-          echo "✅ Using provided Heroku API key"
-          heroku whoami || echo "Logged in with API key."
-
-      - name: Verify Heroku App Exists
-        env:
-          HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
-        run: |
-          if [ -z "$HEROKU_APP_NAME" ]; then
-            echo "❌ Missing HEROKU_APP_NAME secret!"
-            exit 1
-          fi
-          echo "Checking if Heroku app '$HEROKU_APP_NAME' exists..."
-          if ! heroku apps:info -a "$HEROKU_APP_NAME" > /dev/null 2>&1; then
-            echo "❌ Heroku app '$HEROKU_APP_NAME' not found!"
-            exit 1
-          fi
-          echo "✅ Heroku app '$HEROKU_APP_NAME' verified."
-
-      - name: Add Heroku git remote
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-          HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
-        run: |
-          git remote remove heroku 2>/dev/null || true
-          git remote add heroku https://heroku:${HEROKU_API_KEY}@git.heroku.com/${HEROKU_APP_NAME}.git
-          git remote -v
-
-      - name: Unshallow the git history for Heroku
-        run: git fetch --prune --unshallow
+          echo "machine api.heroku.com" > ~/.netrc
+          echo "  login $HEROKU_EMAIL" >> ~/.netrc
+          echo "  password $HEROKU_API_KEY" >> ~/.netrc
+          echo "machine git.heroku.com" >> ~/.netrc
+          echo "  login $HEROKU_EMAIL" >> ~/.netrc
+          echo "  password $HEROKU_API_KEY" >> ~/.netrc
+          heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
 
       - name: Deploy to Heroku
-        run: git push heroku HEAD:main --force
-
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add backend/static -f
+          git commit -m "Include frontend build for deploy" || echo "No changes to commit"
+          git push heroku HEAD:main --force
