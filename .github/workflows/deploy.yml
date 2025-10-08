@@ -33,12 +33,15 @@ jobs:
           cd frontend
           npm run build
 
-      # 👇 Copy the React build output into the Flask app’s static directory
+      # ✅ Copy React build into backend/static so Heroku can serve it
       - name: Move frontend build to backend static folder
         run: |
           mkdir -p backend/static
           rm -rf backend/static/*
           cp -r frontend/dist/* backend/static/
+          echo "✅ Copied frontend build to backend/static/"
+          ls backend/static
+
 
       - name: Set up Python
         uses: actions/setup-python@v5
