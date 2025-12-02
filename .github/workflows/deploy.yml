@@ -1,4 +1,6 @@
 name: Deploy to Heroku
+permissions:
+  contents: read
 
 on:
   push:
