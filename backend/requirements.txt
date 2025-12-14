@@ -1,3 +1,4 @@
+backend==0.2.4.1
 beautifulsoup4==4.14.3
 docx==0.2.4
 fastapi==0.123.10
@@ -6,7 +7,6 @@ jose==1.0.0
 openai==2.9.0
 passlib==1.7.4
 pdfminer==20191125
-psycopg2_binary==2.9.11
 pydantic==2.12.5
 pytest==9.0.1
 python-dotenv==1.2.1
