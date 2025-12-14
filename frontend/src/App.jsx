@@ -7,7 +7,7 @@ import BulletRewriter from "./BulletRewriter";
 import ResumeEditor from "./ResumeEditor";
 import MyResumesDashboard from "./MyResumesDashboard";
 import JobAdScanner from "./JobAdScanner";
-import { TierBanner } from "./components/TierBanner";
+
 
 
 
@@ -31,9 +31,9 @@ function App() {
   };
 
   return (
-    <div>
+    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 1rem" }}>
       <div style={{background: '#ff0', color: '#000', padding: 8, marginBottom: 8}}>DEBUG: App component rendered</div>
-      <TierBanner tier={tier} />
+      {/* <TierBanner tier={tier} /> removed: not part of project */}
       <div className="flex gap-2 mb-4">
         <button onClick={() => setShowDashboard((v) => !v)} className="bg-gray-200 px-3 py-1 rounded">
           {showDashboard ? 'Hide' : 'Show'} My Resumes

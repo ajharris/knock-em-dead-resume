@@ -1,0 +1,83 @@
+name: Deploy to Heroku
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 👈 ensures full history so Heroku accepts the push
+
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
+      # ✅ Copy React build into backend/static
+      - name: Move frontend build to backend static folder
+        run: |
+          mkdir -p backend/static
+          rm -rf backend/static/*
+          cp -r frontend/dist/* backend/static/
+          echo "✅ Copied frontend build to backend/static/"
+          ls backend/static
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install backend dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Install Heroku CLI
+        run: curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Verify frontend build exists before deploy
+        run: |
+          if [ ! -f backend/static/index.html ]; then
+            echo "❌ Frontend build missing!"; exit 1;
+          else
+            echo "✅ Frontend build found.";
+          fi
+
+      - name: Set up Heroku authentication
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          echo "machine api.heroku.com" > ~/.netrc
+          echo "  login $HEROKU_EMAIL" >> ~/.netrc
+          echo "  password $HEROKU_API_KEY" >> ~/.netrc
+          echo "machine git.heroku.com" >> ~/.netrc
+          echo "  login $HEROKU_EMAIL" >> ~/.netrc
+          echo "  password $HEROKU_API_KEY" >> ~/.netrc
+          heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
+
+      - name: Deploy to Heroku
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add backend/static -f
+          git commit -m "Include frontend build for deploy" || echo "No changes to commit"
+          git push heroku HEAD:main --force
