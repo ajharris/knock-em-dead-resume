@@ -1,10 +1,12 @@
 import pytest
 from fastapi.testclient import TestClient
+import pytest
+from fastapi.testclient import TestClient
 from backend.app.main import app
 from backend.app.models import User, Resume
 from backend.app.database import get_db
 from sqlalchemy.orm import Session
-from backend.app.auth_utils import get_password_hash
+from backend.app.auth_utils import get_password_hash, create_access_token
 import json
 
 client = TestClient(app)
@@ -15,8 +17,9 @@ def create_user_and_token(db: Session, email: str, password: str):
     db.add(user)
     db.commit()
     db.refresh(user)
-    # Simulate login to get token (implement as needed)
-    return user, "fake-token"
+    # Create a valid JWT access token for tests (sub claim = email)
+    token = create_access_token({"sub": user.email})
+    return user, token
 
 @pytest.fixture
 def db_session():
@@ -78,20 +81,6 @@ def test_user_cannot_access_others_resume(db_session, user_and_token):
     # User2 tries to delete
     resp = client.delete(f"/resumes/{resume_id}", headers=auth_headers(token2))
     assert resp.status_code == 404
-import pytest
-from fastapi.testclient import TestClient
-from backend.app.main import app
-from backend.app.models import User, Resume
-from backend.app.database import get_db
-from sqlalchemy.orm import Session
-from backend.app.auth_utils import get_password_hash
-import json
-
-client = TestClient(app)
-
-# Helper to create a user and get token
-def create_user_and_token(db: Session, email: str, password: str):
-    user = User(name="Test User", email=email, hashed_password=get_password_hash(password))
     db.add(user)
     db.commit()
     db.refresh(user)

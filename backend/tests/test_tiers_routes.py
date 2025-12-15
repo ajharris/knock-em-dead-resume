@@ -26,7 +26,9 @@ def test_free_user_cannot_book(monkeypatch):
     user = create_user(db, "free")
     station = create_station(db, 0)
     def fake_get_current_user(): return user
-    # Booking logic removed
+    # Monkeypatch the app-level get_current_user used by the bookings endpoint
+    monkeypatch.setattr("backend.app.main.get_current_user", lambda: user)
+    response = client.post("/bookings", json={"station_id": station.id})
     assert response.status_code == 403
     assert "Pro subscription required" in response.text
 
@@ -35,9 +37,10 @@ def test_pro_user_can_book(monkeypatch):
     user = create_user(db, "pro")
     station = create_station(db, 0)
     def fake_get_current_user(): return user
-    # Booking logic removed
+    monkeypatch.setattr("backend.app.main.get_current_user", lambda: user)
+    response = client.post("/bookings", json={"station_id": station.id})
     assert response.status_code == 200
-    # Booking logic removed
+    assert response.json().get("status") == "booked"
 
 def test_stations_endpoint(monkeypatch):
     db = next(get_db())

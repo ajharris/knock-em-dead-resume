@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+import uuid
 from sqlalchemy.orm import Session
 from typing import List
 from .. import models, schemas
@@ -28,14 +29,22 @@ def list_resumes(db: Session = Depends(get_db), current_user: models.User = Depe
 
 @router.get("/{resume_id}", response_model=schemas.Resume)
 def get_resume(resume_id: str, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    resume = db.query(models.Resume).filter(models.Resume.id == resume_id, models.Resume.user_id == current_user.id).first()
+    try:
+        rid = uuid.UUID(resume_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    resume = db.query(models.Resume).filter(models.Resume.id == rid, models.Resume.user_id == current_user.id).first()
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
     return resume
 
 @router.put("/{resume_id}", response_model=schemas.Resume)
 def update_resume(resume_id: str, resume_update: schemas.ResumeUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    resume = db.query(models.Resume).filter(models.Resume.id == resume_id, models.Resume.user_id == current_user.id).first()
+    try:
+        rid = uuid.UUID(resume_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    resume = db.query(models.Resume).filter(models.Resume.id == rid, models.Resume.user_id == current_user.id).first()
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
     resume.title = resume_update.title
@@ -46,7 +55,11 @@ def update_resume(resume_id: str, resume_update: schemas.ResumeUpdate, db: Sessi
 
 @router.delete("/{resume_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_resume(resume_id: str, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    resume = db.query(models.Resume).filter(models.Resume.id == resume_id, models.Resume.user_id == current_user.id).first()
+    try:
+        rid = uuid.UUID(resume_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    resume = db.query(models.Resume).filter(models.Resume.id == rid, models.Resume.user_id == current_user.id).first()
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
     db.delete(resume)

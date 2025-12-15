@@ -4,7 +4,7 @@ from backend.app import models, database
 from fastapi.responses import StreamingResponse
 import io
 from docx import Document
-from weasyprint import HTML
+
 
 router = APIRouter()
 
@@ -78,5 +78,15 @@ def export_resume_pdf(user_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     html = render_resume_html(user)
+    try:
+        # Lazy import WeasyPrint to avoid requiring system libraries at test-collection time.
+        from weasyprint import HTML
+    except Exception as e:
+        # Surface a clear error when attempting to export PDF without the native deps installed.
+        raise HTTPException(status_code=500, detail=(
+            "WeasyPrint or its system dependencies are not available. "
+            "Install Pango/GTK/Cairo (see WeasyPrint docs) or run tests with a mock in place."
+        ))
+
     pdf_bytes = HTML(string=html).write_pdf()
     return Response(pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=resume_{user_id}.pdf"})
